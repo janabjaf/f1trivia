@@ -1,0 +1,13 @@
+{
+    "author": ["jaffar21"],
+    "install_msg": "Thanks for installing F1 Driver Guess! Run `[p]f1drivers setup` once as admin to download all driver portraits. Then use `[p]f1drivers start` to play!",
+    "short": "Guess the F1 driver from their photo — first to 10 points wins.",
+    "description": "A picture-based Formula 1 trivia game. The bot posts a photo of a driver and the first person to type the correct name wins the point. Accepts first names, last names, full names, and nicknames. Run [p]f1drivers setup once to cache all images locally for instant, reliable delivery. First to 10 points wins.",
+    "end_user_data_statement": "This cog does not store any end user data.",
+    "min_bot_version": "3.5.0",
+    "min_python_version": [3, 8, 0],
+    "hidden": false,
+    "disabled": false,
+    "requirements": [],
+    "tags": ["formula1", "f1", "trivia", "quiz", "racing", "drivers", "picture", "guess", "fun", "game"]
+}
