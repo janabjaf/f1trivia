@@ -1,0 +1,13 @@
+{
+    "author": ["jaffar21"],
+    "install_msg": "Thanks for installing F1 Trivia! Use [p]f1trivia start to kick off a game. First to 10 points wins. Good luck!",
+    "short": "Formula 1 trivia game — first to 10 points wins, 15 seconds per question.",
+    "description": "A fast-paced Formula 1 trivia cog covering every era of the sport. Each round lasts 15 seconds and the first person to type the correct answer earns a point. First player to reach 10 points wins the game. Covers drivers, teams, circuits, records, and history from the 1950s all the way to today. Answers are flexible — nicknames, first names, last names, and abbreviations are all accepted.",
+    "end_user_data_statement": "This cog does not store any end user data.",
+    "min_bot_version": "3.5.0",
+    "min_python_version": [3, 8, 0],
+    "hidden": false,
+    "disabled": false,
+    "requirements": [],
+    "tags": ["formula1", "f1", "trivia", "quiz", "racing", "motorsport", "fun", "game"]
+}
