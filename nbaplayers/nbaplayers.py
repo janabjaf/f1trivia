@@ -93,7 +93,6 @@ PLAYERS: List[Dict] = [
     {"slug": "demarcus_cousins",        "name": "DeMarcus Cousins",        "answers": ["cousins", "demarcus cousins", "boogie"]},
     {"slug": "andre_iguodala",          "name": "Andre Iguodala",          "answers": ["iguodala", "andre iguodala", "iggy"]},
     {"slug": "kevin_love",              "name": "Kevin Love",              "answers": ["love", "kevin love"]},
-
     # ── 2000s–2010s Era ───────────────────────────────────────────────────
     {"slug": "dwyane_wade",             "name": "Dwyane Wade",             "answers": ["wade", "dwyane wade", "d wade", "flash"]},
     {"slug": "carmelo_anthony",         "name": "Carmelo Anthony",         "answers": ["carmelo", "melo", "carmelo anthony"]},
@@ -119,7 +118,6 @@ PLAYERS: List[Dict] = [
     {"slug": "peja_stojakovic",         "name": "Peja Stojaković",         "answers": ["peja", "stojakovic", "peja stojakovic"]},
     {"slug": "antawn_jamison",          "name": "Antawn Jamison",          "answers": ["jamison", "antawn jamison"]},
     {"slug": "sam_cassell",             "name": "Sam Cassell",             "answers": ["cassell", "sam cassell"]},
-
     # ── 90s Legends ───────────────────────────────────────────────────────
     {"slug": "allen_iverson",           "name": "Allen Iverson",           "answers": ["iverson", "ai", "allen iverson", "the answer"]},
     {"slug": "ray_allen",               "name": "Ray Allen",               "answers": ["ray allen", "jesus shuttlesworth"]},
@@ -144,9 +142,7 @@ PLAYERS: List[Dict] = [
     {"slug": "karl_malone",             "name": "Karl Malone",             "answers": ["karl malone", "malone", "the mailman"]},
     {"slug": "joe_dumars",              "name": "Joe Dumars",              "answers": ["dumars", "joe dumars"]},
     {"slug": "mitch_richmond",          "name": "Mitch Richmond",          "answers": ["richmond", "mitch richmond", "the rock"]},
-    {"slug": "latrell_sprewell",        "name": "Latrell Sprewell",        "answers": ["sprewell", "latrell sprewell", "spree"]},
     {"slug": "glen_rice",               "name": "Glen Rice",               "answers": ["glen rice", "rice"]},
-
     # ── All-Time Legends ──────────────────────────────────────────────────
     {"slug": "michael_jordan",          "name": "Michael Jordan",          "answers": ["jordan", "mj", "michael jordan", "air jordan", "his airness"]},
     {"slug": "kobe_bryant",             "name": "Kobe Bryant",             "answers": ["kobe", "bryant", "kobe bryant", "black mamba", "mamba"]},
@@ -177,169 +173,159 @@ PLAYERS: List[Dict] = [
     {"slug": "willis_reed",             "name": "Willis Reed",             "answers": ["reed", "willis reed"]},
     {"slug": "dan_issel",               "name": "Dan Issel",               "answers": ["issel", "dan issel", "the horse"]},
     {"slug": "artis_gilmore",           "name": "Artis Gilmore",           "answers": ["gilmore", "artis gilmore", "a-train"]},
-    {"slug": "nate_archibald2",         "name": "Nate Archibald",          "answers": []},
 ]
 
-# Strip duplicate slugs and entries with empty answers
+# Strip duplicate slugs
 _seen: set = set()
 _deduped: List[Dict] = []
 for _p in PLAYERS:
-    if _p["slug"] not in _seen and _p["answers"]:
+    if _p["slug"] not in _seen:
         _seen.add(_p["slug"])
         _deduped.append(_p)
 PLAYERS = _deduped
 
 # ---------------------------------------------------------------------------
-# Image URLs — all Wikipedia (consistent with f1drivers approach)
-# Uses Special:FilePath which redirects to the actual CDN file.
-# If a filename is wrong Wikipedia returns 404 → skipped cleanly.
+# Image URLs — all pre-resolved Wikimedia CDN URLs (verified via Wikipedia API)
 # ---------------------------------------------------------------------------
-
-def _wiki(filename: str) -> str:
-    return f"https://en.wikipedia.org/wiki/Special:FilePath/{filename}"
 
 PLAYER_IMAGE_URLS: Dict[str, str] = {
     # ── Current Stars ─────────────────────────────────────────────────────
-    "lebron_james":             _wiki("LeBron_James_cropped.jpg"),
-    "stephen_curry":            _wiki("Stephen_Curry_Chef_Curry.jpg"),
-    "kevin_durant":             _wiki("Kevin_Durant_%28gs%29.jpg"),
-    "giannis_antetokounmpo":    _wiki("Giannis_Antetokounmpo_2019.jpg"),
-    "kawhi_leonard":            _wiki("Kawhi_Leonard_2022.jpg"),
-    "james_harden":             _wiki("James_Harden_2017.jpg"),
-    "russell_westbrook":        _wiki("Russell_Westbrook_2016.jpg"),
-    "anthony_davis":            _wiki("Anthony_Davis_%28basketball%29.jpg"),
-    "kyrie_irving":             _wiki("Kyrie_Irving_2016.jpg"),
-    "damian_lillard":           _wiki("Damian_Lillard_2019.jpg"),
-    "joel_embiid":              _wiki("Joel_Embiid_2022.jpg"),
-    "nikola_jokic":             _wiki("Nikola_Joki%C4%87_2022.jpg"),
-    "luka_doncic":              _wiki("Luka_Don%C4%8Di%C4%87_2019-04-17.jpg"),
-    "ja_morant":                _wiki("Ja_Morant_2022.jpg"),
-    "zion_williamson":          _wiki("Zion_Williamson_2019.jpg"),
-    "trae_young":               _wiki("Trae_Young_2020.jpg"),
-    "devin_booker":             _wiki("Devin_Booker_2020.jpg"),
-    "paul_george":              _wiki("Paul_George_2021.jpg"),
-    "jimmy_butler":             _wiki("Jimmy_Butler_2022.jpg"),
-    "jayson_tatum":             _wiki("Jayson_Tatum_2022.jpg"),
-    "jaylen_brown":             _wiki("Jaylen_Brown_2022.jpg"),
-    "bam_adebayo":              _wiki("Bam_Adebayo_2022.jpg"),
-    "donovan_mitchell":         _wiki("Donovan_Mitchell_2022.jpg"),
-    "deaaron_fox":              _wiki("De%27Aaron_Fox_2022.jpg"),
-    "shai_gilgeous_alexander":  _wiki("Shai_Gilgeous-Alexander_2022.jpg"),
-    "karl_anthony_towns":       _wiki("Karl-Anthony_Towns_2022.jpg"),
-    "draymond_green":           _wiki("Draymond_Green_2016.jpg"),
-    "klay_thompson":            _wiki("Klay_Thompson_2016.jpg"),
-    "chris_paul":               _wiki("Chris_Paul_2022.jpg"),
-    "tyrese_haliburton":        _wiki("Tyrese_Haliburton_2022.jpg"),
-    "lamelo_ball":              _wiki("LaMelo_Ball_2022.jpg"),
-    "anthony_edwards":          _wiki("Anthony_Edwards_2022.jpg"),
-    "cade_cunningham":          _wiki("Cade_Cunningham_2022.jpg"),
-    "victor_wembanyama":        _wiki("Victor_Wembanyama_2023.jpg"),
-    "paolo_banchero":           _wiki("Paolo_Banchero_2022.jpg"),
-    "jaren_jackson_jr":         _wiki("Jaren_Jackson_Jr._2022.jpg"),
-    "brandon_ingram":           _wiki("Brandon_Ingram_2022.jpg"),
-    "julius_randle":            _wiki("Julius_Randle_2022.jpg"),
-    "rudy_gobert":              _wiki("Rudy_Gobert_2022.jpg"),
-    "jamal_murray":             _wiki("Jamal_Murray_2022.jpg"),
-    "pascal_siakam":            _wiki("Pascal_Siakam_2022.jpg"),
-    "bradley_beal":             _wiki("Bradley_Beal_2020.jpg"),
-    "jrue_holiday":             _wiki("Jrue_Holiday_2022.jpg"),
-    "zach_lavine":              _wiki("Zach_LaVine_2022.jpg"),
-    "kemba_walker":             _wiki("Kemba_Walker_2020.jpg"),
-    "john_wall":                _wiki("John_Wall_2018.jpg"),
-    "kyle_lowry":               _wiki("Kyle_Lowry_2022.jpg"),
-    "deron_williams":           _wiki("Deron_Williams_2016.jpg"),
-    "rajon_rondo":              _wiki("Rajon_Rondo_2017.jpg"),
-    "marc_gasol":               _wiki("Marc_Gasol_2019.jpg"),
-    "demarcus_cousins":         _wiki("DeMarcus_Cousins_2018.jpg"),
-    "andre_iguodala":           _wiki("Andre_Iguodala_2016.jpg"),
-    "kevin_love":               _wiki("Kevin_Love_2022.jpg"),
-
+    "lebron_james":             "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/LeBron_James_%2851959977144%29_%28cropped2%29.jpg/500px-LeBron_James_%2851959977144%29_%28cropped2%29.jpg",
+    "stephen_curry":            "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Steph_Curry_P20230117AS-1347_%28cropped%29.jpg/500px-Steph_Curry_P20230117AS-1347_%28cropped%29.jpg",
+    "kevin_durant":             "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Kevin_Durant%2C_Paris_2024_%28cropped%29.jpg/500px-Kevin_Durant%2C_Paris_2024_%28cropped%29.jpg",
+    "giannis_antetokounmpo":    "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Giannis_Antetokounmpo_%2851915153421%29_%28cropped%29.jpg/500px-Giannis_Antetokounmpo_%2851915153421%29_%28cropped%29.jpg",
+    "kawhi_leonard":            "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Kawhi_Leonard_%287440607%29_%28cropped%29.jpg/500px-Kawhi_Leonard_%287440607%29_%28cropped%29.jpg",
+    "james_harden":             "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Harden_dribbling_midcourt%2C_Cavaliers_vs_Nets_on_January_17%2C_2022_%28cropped%29.jpg/500px-Harden_dribbling_midcourt%2C_Cavaliers_vs_Nets_on_January_17%2C_2022_%28cropped%29.jpg",
+    "russell_westbrook":        "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Russell_Westbrook_%28March_21%2C_2022%29_%28cropped%29.jpg/500px-Russell_Westbrook_%28March_21%2C_2022%29_%28cropped%29.jpg",
+    "anthony_davis":            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Anthony_Davis_pre-game_%28cropped%29.jpg/500px-Anthony_Davis_pre-game_%28cropped%29.jpg",
+    "kyrie_irving":             "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Kyrie_Irving_%2851830909437%29_%28cropped%29.jpg/500px-Kyrie_Irving_%2851830909437%29_%28cropped%29.jpg",
+    "damian_lillard":           "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Damian_Lillard_%282021%29_%28cropped%29.jpg/500px-Damian_Lillard_%282021%29_%28cropped%29.jpg",
+    "joel_embiid":              "https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Joel_Embiid_2019.jpg/500px-Joel_Embiid_2019.jpg",
+    "nikola_jokic":             "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Nikola_Jokic_free_throw_%28cropped%29.jpg/500px-Nikola_Jokic_free_throw_%28cropped%29.jpg",
+    "luka_doncic":              "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Luka_Doncic_%2851914951721%29_%28cropped1%29.jpg/500px-Luka_Doncic_%2851914951721%29_%28cropped1%29.jpg",
+    "ja_morant":                "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Ja_Morant_2021.jpg/500px-Ja_Morant_2021.jpg",
+    "zion_williamson":          "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Zion_Williamson_2020_%28cropped%29.jpg/500px-Zion_Williamson_2020_%28cropped%29.jpg",
+    "trae_young":               "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Trae_Young_%282022_All-Star_Weekend%29_%28cropped%29.jpg/500px-Trae_Young_%282022_All-Star_Weekend%29_%28cropped%29.jpg",
+    "devin_booker":             "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Devin_Booker%2C_Olympic_Games_2024_%28cropped%29.jpg/500px-Devin_Booker%2C_Olympic_Games_2024_%28cropped%29.jpg",
+    "paul_george":              "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Paul_George_Pacers.jpg/500px-Paul_George_Pacers.jpg",
+    "jimmy_butler":             "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/CES_2026_-_Jimmy_Butler_01_%28cropped%29.jpg/500px-CES_2026_-_Jimmy_Butler_01_%28cropped%29.jpg",
+    "jayson_tatum":             "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Celtics_at_Wizards_2024-12-044_%28cropped_2%29.jpg/500px-Celtics_at_Wizards_2024-12-044_%28cropped_2%29.jpg",
+    "jaylen_brown":             "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Jaylen_Brown_2022.jpg/500px-Jaylen_Brown_2022.jpg",
+    "bam_adebayo":              "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Bam_Adebayo_%28cropped%29.jpg/500px-Bam_Adebayo_%28cropped%29.jpg",
+    "donovan_mitchell":         "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Donovan_Mitchell_Pregame.jpg/500px-Donovan_Mitchell_Pregame.jpg",
+    "deaaron_fox":              "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/De%27Aaron_Fox.jpg/500px-De%27Aaron_Fox.jpg",
+    "shai_gilgeous_alexander":  "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/2023-08-09_Deutschland_gegen_Kanada_%28Basketball-L%C3%A4nderspiel%29_by_Sandro_Halank%E2%80%93109.jpg/500px-2023-08-09_Deutschland_gegen_Kanada_%28Basketball-L%C3%A4nderspiel%29_by_Sandro_Halank%E2%80%93109.jpg",
+    "karl_anthony_towns":       "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Karl-Anthony_Towns_%2851914283512%29_%28cropped%29_%28cropped%29.jpg/500px-Karl-Anthony_Towns_%2851914283512%29_%28cropped%29_%28cropped%29.jpg",
+    "draymond_green":           "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Draymond_Green_2022.jpg/500px-Draymond_Green_2022.jpg",
+    "klay_thompson":            "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Klay_Thompson_%28cropped%29.jpg/500px-Klay_Thompson_%28cropped%29.jpg",
+    "chris_paul":               "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Chris_Paul_%282022_All-Star_Weekend%29_%28cropped%29.jpg/500px-Chris_Paul_%282022_All-Star_Weekend%29_%28cropped%29.jpg",
+    "tyrese_haliburton":        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/1_tyrese_haliburton_2025_%28cropped_2%29.jpg/500px-1_tyrese_haliburton_2025_%28cropped_2%29.jpg",
+    "lamelo_ball":              "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/LaMelo_Ball_%28cropped%29.jpg/500px-LaMelo_Ball_%28cropped%29.jpg",
+    "anthony_edwards":          "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Anthony_Edwards_Kentavious_Caldwell-Pope_%2851734745028%29_%28cropped%29_%28cropped%29.jpg/500px-Anthony_Edwards_Kentavious_Caldwell-Pope_%2851734745028%29_%28cropped%29_%28cropped%29.jpg",
+    "cade_cunningham":          "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/1_cade_cunningham_2024.jpg/500px-1_cade_cunningham_2024.jpg",
+    "victor_wembanyama":        "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Victor_Wembanyama_San_Antonio_Spurs_2024.jpg/500px-Victor_Wembanyama_San_Antonio_Spurs_2024.jpg",
+    "paolo_banchero":           "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Paolo_Banchero.png/500px-Paolo_Banchero.png",
+    "jaren_jackson_jr":         "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Jaren_Jackson_%2851814052094%29_%28cropped%29.jpg/500px-Jaren_Jackson_%2851814052094%29_%28cropped%29.jpg",
+    "brandon_ingram":           "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Brandon_Ingram_2020_%28cropped2%29.jpg/500px-Brandon_Ingram_2020_%28cropped2%29.jpg",
+    "julius_randle":            "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Julius_Randle_with_Lakers.jpg/500px-Julius_Randle_with_Lakers.jpg",
+    "rudy_gobert":              "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Rudy_Gobert.jpg/500px-Rudy_Gobert.jpg",
+    "jamal_murray":             "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Jamal_Murray_free_throw_%28cropped%29.jpg/500px-Jamal_Murray_free_throw_%28cropped%29.jpg",
+    "pascal_siakam":            "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/1_pascal_siakam_2025_%28cropped%29.jpg/500px-1_pascal_siakam_2025_%28cropped%29.jpg",
+    "bradley_beal":             "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Bradley_Beal_WSH_Wizards_2022_%28croppedface%29.jpg/500px-Bradley_Beal_WSH_Wizards_2022_%28croppedface%29.jpg",
+    "jrue_holiday":             "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Celtics_at_Wizards_2024-12-021_%28cropped%29.jpg/500px-Celtics_at_Wizards_2024-12-021_%28cropped%29.jpg",
+    "zach_lavine":              "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Zach_LaVine_%282022_All-Star_Weekend%29.jpg/500px-Zach_LaVine_%282022_All-Star_Weekend%29.jpg",
+    "kemba_walker":             "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Kemba_Walker_2019.jpg/500px-Kemba_Walker_2019.jpg",
+    "john_wall":                "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/2019_John_Wall_%2848823815693%29.jpg/500px-2019_John_Wall_%2848823815693%29.jpg",
+    "kyle_lowry":               "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Kyle_Lowry_%2826715268738%29_%28cropped%29.jpg/500px-Kyle_Lowry_%2826715268738%29_%28cropped%29.jpg",
+    "deron_williams":           "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Deron_Williams_Nets_2.jpg/500px-Deron_Williams_Nets_2.jpg",
+    "rajon_rondo":              "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Rajon_Rondo_%2838294689275%29_%28cropped%29.jpg/500px-Rajon_Rondo_%2838294689275%29_%28cropped%29.jpg",
+    "marc_gasol":               "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Marc_Gasol-jul_2018.jpg/500px-Marc_Gasol-jul_2018.jpg",
+    "demarcus_cousins":         "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/1_demarcus_cousins_2019_%28cropped%29.jpg/500px-1_demarcus_cousins_2019_%28cropped%29.jpg",
+    "andre_iguodala":           "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Heat_Andre_Iguodala_%28cropped%29.jpg/500px-Heat_Andre_Iguodala_%28cropped%29.jpg",
+    "kevin_love":               "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Kevin_Love_2020_%28cropped%29.jpg/500px-Kevin_Love_2020_%28cropped%29.jpg",
     # ── 2000s–2010s Era ───────────────────────────────────────────────────
-    "dwyane_wade":              _wiki("Dwyane_Wade_2013.jpg"),
-    "carmelo_anthony":          _wiki("Carmelo_Anthony_2019.jpg"),
-    "chris_bosh":               _wiki("Chris_Bosh_2013.jpg"),
-    "dwight_howard":            _wiki("Dwight_Howard_2019.jpg"),
-    "pau_gasol":                _wiki("Pau_Gasol_2013.jpg"),
-    "tony_parker":              _wiki("Tony_Parker_2012.jpg"),
-    "manu_ginobili":            _wiki("Manu_Gin%C3%B3bili_2018.jpg"),
-    "derrick_rose":             _wiki("Derrick_Rose_2011.jpg"),
-    "blake_griffin":            _wiki("Blake_Griffin_2019.jpg"),
-    "yao_ming":                 _wiki("Yao_Ming_2009.jpg"),
-    "chauncey_billups":         _wiki("Chauncey_Billups_2019.jpg"),
-    "vince_carter":             _wiki("Vince_Carter_2019.jpg"),
-    "tracy_mcgrady":            _wiki("Tracy_McGrady_2019.jpg"),
-    "grant_hill":               _wiki("Grant_Hill_%28basketball%29.jpg"),
-    "anfernee_hardaway":        _wiki("Anfernee_Hardaway_2019.jpg"),
-    "amare_stoudemire":         _wiki("Amar%27e_Stoudemire.jpg"),
-    "gilbert_arenas":           _wiki("Gilbert_Arenas.jpg"),
-    "stephon_marbury":          _wiki("Stephon_Marbury.jpg"),
-    "lamar_odom":               _wiki("Lamar_Odom_2010.jpg"),
-    "baron_davis":              _wiki("Baron_Davis_2009.jpg"),
-    "shawn_kemp":               _wiki("Shawn_Kemp.jpg"),
-    "peja_stojakovic":          _wiki("Peja_Stojakovi%C4%87.jpg"),
-    "antawn_jamison":           _wiki("Antawn_Jamison.jpg"),
-    "sam_cassell":              _wiki("Sam_Cassell.jpg"),
-
+    "dwyane_wade":              "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Dwyane_Wade_e1.jpg/500px-Dwyane_Wade_e1.jpg",
+    "carmelo_anthony":          "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Carmelo_Anthony_at_2025_NBA_All_Star_Weekend_%28cropped%29.jpg/500px-Carmelo_Anthony_at_2025_NBA_All_Star_Weekend_%28cropped%29.jpg",
+    "chris_bosh":               "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Chris_Bosh_Open_Congress_2022.jpg/500px-Chris_Bosh_Open_Congress_2022.jpg",
+    "dwight_howard":            "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Dwight_Howard_pre-game_%28cropped%29.jpg/500px-Dwight_Howard_pre-game_%28cropped%29.jpg",
+    "pau_gasol":                "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/PauCaptura.jpg/500px-PauCaptura.jpg",
+    "tony_parker":              "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Flamme_olympique_Reims_1525799.jpg/500px-Flamme_olympique_Reims_1525799.jpg",
+    "manu_ginobili":            "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Manu_Ginobili_Spurs-Magic011_%28cropped%29.jpg/500px-Manu_Ginobili_Spurs-Magic011_%28cropped%29.jpg",
+    "derrick_rose":             "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Derrick_Rose_03.jpg/500px-Derrick_Rose_03.jpg",
+    "blake_griffin":            "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Blake_Griffin_Brooklyn_Nets_2022_%28cropped%29.jpg/500px-Blake_Griffin_Brooklyn_Nets_2022_%28cropped%29.jpg",
+    "yao_ming":                 "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Yao_Ming_in_2014_%28cropped%29.jpg/500px-Yao_Ming_in_2014_%28cropped%29.jpg",
+    "chauncey_billups":         "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Billups_coach_%28cropped%29.jpg/500px-Billups_coach_%28cropped%29.jpg",
+    "vince_carter":             "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Vince_Carter_2013-03-25_%281%29.jpg/500px-Vince_Carter_2013-03-25_%281%29.jpg",
+    "tracy_mcgrady":            "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Tracy_McGrady_1.jpg/500px-Tracy_McGrady_1.jpg",
+    "grant_hill":               "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Grant_Hill_2007-12-08.jpg/500px-Grant_Hill_2007-12-08.jpg",
+    "anfernee_hardaway":        "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/HBCUAllstarBasketball4223-118_%2852802377149%29_%28cropped%29.jpg/500px-HBCUAllstarBasketball4223-118_%2852802377149%29_%28cropped%29.jpg",
+    "amare_stoudemire":         "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Amar%27e_Stoudemire_free_throw.jpg/500px-Amar%27e_Stoudemire_free_throw.jpg",
+    "gilbert_arenas":           "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Gilbert_arenas_2008.jpg/500px-Gilbert_arenas_2008.jpg",
+    "stephon_marbury":          "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Stephon_Marbury_%40_Amazon_Fishbowl_2.jpg/500px-Stephon_Marbury_%40_Amazon_Fishbowl_2.jpg",
+    "lamar_odom":               "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Lamar_Odom_%2837%29_%28cropped%29.jpg/500px-Lamar_Odom_%2837%29_%28cropped%29.jpg",
+    "baron_davis":              "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ee/Collision_2023_-_RCZ_0560_%2853008986428%29_%28cropped%29.jpg/500px-Collision_2023_-_RCZ_0560_%2853008986428%29_%28cropped%29.jpg",
+    "shawn_kemp":               "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Shawn_Kemp_%289523772347%29_%28cropped%29.jpg/500px-Shawn_Kemp_%289523772347%29_%28cropped%29.jpg",
+    "peja_stojakovic":          "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Peja_Stojakovic_Mavs_cropped.jpg/500px-Peja_Stojakovic_Mavs_cropped.jpg",
+    "antawn_jamison":           "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/2019_Antawn_Jamison_%2848824316652%29_%28cropped%29.jpg/500px-2019_Antawn_Jamison_%2848824316652%29_%28cropped%29.jpg",
+    "sam_cassell":              "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Wizards_Assistant_Coach_Sam_Cassell_%28cropped%29.jpg/500px-Wizards_Assistant_Coach_Sam_Cassell_%28cropped%29.jpg",
     # ── 90s Legends ───────────────────────────────────────────────────────
-    "allen_iverson":            _wiki("Allen_Iverson_2016.jpg"),
-    "ray_allen":                _wiki("Ray_Allen_2012.jpg"),
-    "paul_pierce":              _wiki("Paul_Pierce_2012.jpg"),
-    "kevin_garnett":            _wiki("Kevin_Garnett_2007.jpg"),
-    "dirk_nowitzki":            _wiki("Dirk_Nowitzki_2019.jpg"),
-    "steve_nash":               _wiki("Steve_Nash_2009.jpg"),
-    "jason_kidd":               _wiki("Jason_Kidd_2012.jpg"),
-    "gary_payton":              _wiki("Gary_Payton.jpg"),
-    "reggie_miller":            _wiki("Reggie_Miller.jpg"),
-    "alonzo_mourning":          _wiki("Alonzo_Mourning.jpg"),
-    "scottie_pippen":           _wiki("Scottie_Pippen.jpg"),
-    "dennis_rodman":            _wiki("Dennis_Rodman.jpg"),
-    "dominique_wilkins":        _wiki("Dominique_Wilkins.jpg"),
-    "isiah_thomas":             _wiki("Isiah_Thomas.jpg"),
-    "clyde_drexler":            _wiki("Clyde_Drexler.jpg"),
-    "david_robinson":           _wiki("David_Robinson_%28basketball%29.jpg"),
-    "hakeem_olajuwon":          _wiki("Hakeem_Olajuwon.jpg"),
-    "charles_barkley":          _wiki("Charles_Barkley.jpg"),
-    "patrick_ewing":            _wiki("Patrick_Ewing.jpg"),
-    "john_stockton":            _wiki("John_Stockton.jpg"),
-    "karl_malone":              _wiki("Karl_Malone.jpg"),
-    "joe_dumars":               _wiki("Joe_Dumars.jpg"),
-    "mitch_richmond":           _wiki("Mitch_Richmond.jpg"),
-    "latrell_sprewell":         _wiki("Latrell_Sprewell.jpg"),
-    "glen_rice":                _wiki("Glen_Rice.jpg"),
-
+    "allen_iverson":            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Allen_Iverson_headshot.jpg/500px-Allen_Iverson_headshot.jpg",
+    "ray_allen":                "https://upload.wikimedia.org/wikipedia/commons/thumb/d/da/Ray_Allen_161208-A-HE359-046_%2831482070191%29.jpg/500px-Ray_Allen_161208-A-HE359-046_%2831482070191%29.jpg",
+    "paul_pierce":              "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Paul_Pierce_2008-01-13_%28cropped%29.jpg/500px-Paul_Pierce_2008-01-13_%28cropped%29.jpg",
+    "kevin_garnett":            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Kevin_Garnett_2008-01-13.jpg/500px-Kevin_Garnett_2008-01-13.jpg",
+    "dirk_nowitzki":            "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Dirk_Nowitzki_2_%28cropped%29.jpg/500px-Dirk_Nowitzki_2_%28cropped%29.jpg",
+    "steve_nash":               "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/SteveNash2014.jpg/500px-SteveNash2014.jpg",
+    "jason_kidd":               "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Jason_Kidd_Nets_coach_cropped.jpg/500px-Jason_Kidd_Nets_coach_cropped.jpg",
+    "gary_payton":              "https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Gary_Payton%2C_Miami_Heat_circa_2007_%28cropped%29.jpg/500px-Gary_Payton%2C_Miami_Heat_circa_2007_%28cropped%29.jpg",
+    "reggie_miller":            "https://upload.wikimedia.org/wikipedia/commons/c/c0/Reggie_Miller_crop.png",
+    "alonzo_mourning":          "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Alonzo_Mourning.jpg/500px-Alonzo_Mourning.jpg",
+    "scottie_pippen":           "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Scottie_Pippen_5-2-22_%28cropped%29.jpg/500px-Scottie_Pippen_5-2-22_%28cropped%29.jpg",
+    "dennis_rodman":            "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Dennis_Rodman_02_%2834649289162%29_%28cropped%29.jpg/500px-Dennis_Rodman_02_%2834649289162%29_%28cropped%29.jpg",
+    "dominique_wilkins":        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Dominique_Wilkins_2022.jpg/500px-Dominique_Wilkins_2022.jpg",
+    "isiah_thomas":             "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Isiah_Thomas_2007_%28cropped%29.jpg/500px-Isiah_Thomas_2007_%28cropped%29.jpg",
+    "clyde_drexler":            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Clyde_Drexler_01.jpg/500px-Clyde_Drexler_01.jpg",
+    "david_robinson":           "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/David_Robinson_2017.jpg/500px-David_Robinson_2017.jpg",
+    "hakeem_olajuwon":          "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg/500px-Nigerian_President_Buhari_Stands_With_Secretary_Kerry%2C_U.S._Delegation_After_They_Attended_His_Inauguration_Ceremony_%28cropped%29.jpg",
+    "charles_barkley":          "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/1_charles_barkley_2019_%28cropped%29.jpg/500px-1_charles_barkley_2019_%28cropped%29.jpg",
+    "patrick_ewing":            "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Patrick_Ewing_2021_%28cropped%29.jpg/500px-Patrick_Ewing_2021_%28cropped%29.jpg",
+    "john_stockton":            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/John_Stockton_2022.jpg/500px-John_Stockton_2022.jpg",
+    "karl_malone":              "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/NBA_HOF%E2%80%99er_Karl_Malone_visits_Barksdale_%289%29_%28cropped%29.jpg/500px-NBA_HOF%E2%80%99er_Karl_Malone_visits_Barksdale_%289%29_%28cropped%29.jpg",
+    "joe_dumars":               "https://upload.wikimedia.org/wikipedia/commons/1/1f/Joe_Dumars.jpg",
+    "mitch_richmond":           "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Mitch_Richmond_cropped.jpg/500px-Mitch_Richmond_cropped.jpg",
+    "glen_rice":                "https://upload.wikimedia.org/wikipedia/commons/1/14/Glen_Rice_2010_%28cropped%29.jpg",
     # ── All-Time Legends ──────────────────────────────────────────────────
-    "michael_jordan":           _wiki("Michael_Jordan_in_2014.jpg"),
-    "kobe_bryant":              _wiki("Kobe_Bryant_2014.jpg"),
-    "shaquille_oneal":          _wiki("Shaquille_O%27Neal_2.jpg"),
-    "tim_duncan":               _wiki("Tim_Duncan_%282009%29.jpg"),
-    "magic_johnson":            _wiki("Magic_Johnson.jpg"),
-    "larry_bird":               _wiki("Larry_Bird.jpg"),
-    "kareem_abdul_jabbar":      _wiki("Kareem_Abdul-Jabbar_%281974%29.jpg"),
-    "julius_erving":            _wiki("Julius_Erving.jpg"),
-    "moses_malone":             _wiki("Moses_Malone.jpg"),
-    "oscar_robertson":          _wiki("Oscar_Robertson.jpg"),
-    "jerry_west":               _wiki("Jerry_West_1963.jpg"),
-    "elgin_baylor":             _wiki("Elgin_Baylor_%281971%29.jpg"),
-    "bill_russell":             _wiki("Bill_Russell_%28basketball%2C_1956%29.jpg"),
-    "wilt_chamberlain":         _wiki("Wilt_Chamberlain.jpg"),
-    "pete_maravich":            _wiki("Pete_Maravich.jpg"),
-    "george_gervin":            _wiki("George_Gervin.jpg"),
-    "nate_archibald":           _wiki("Nate_Archibald.jpg"),
-    "bob_mcadoo":               _wiki("Bob_McAdoo.jpg"),
-    "elvin_hayes":              _wiki("Elvin_Hayes.jpg"),
-    "bob_cousy":                _wiki("Bob_Cousy.jpg"),
-    "rick_barry":               _wiki("Rick_Barry.jpg"),
-    "dave_cowens":              _wiki("Dave_Cowens.jpg"),
-    "bill_walton":              _wiki("Bill_Walton.jpg"),
-    "walt_frazier":             _wiki("Walt_Frazier.jpg"),
-    "george_mikan":             _wiki("George_Mikan.jpg"),
-    "bob_pettit":               _wiki("Bob_Pettit.jpg"),
-    "willis_reed":              _wiki("Willis_Reed.jpg"),
-    "dan_issel":                _wiki("Dan_Issel.jpg"),
-    "artis_gilmore":            _wiki("Artis_Gilmore.jpg"),
+    "michael_jordan":           "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Michael_Jordan_in_2014.jpg/500px-Michael_Jordan_in_2014.jpg",
+    "kobe_bryant":              "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Kobe_Bryant_Dec_2014.jpg/500px-Kobe_Bryant_Dec_2014.jpg",
+    "shaquille_oneal":          "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/TechCrunch_Disrupt_2023_-_Day_1_%28cropped%29.jpg/500px-TechCrunch_Disrupt_2023_-_Day_1_%28cropped%29.jpg",
+    "tim_duncan":               "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Tim_Duncan_Walks_Verizon_Center%27s_Floor_%28cropped%29_%28cropped%29.jpg/500px-Tim_Duncan_Walks_Verizon_Center%27s_Floor_%28cropped%29_%28cropped%29.jpg",
+    "magic_johnson":            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg/500px-Magic_Johnson_at_SXSW_2022_%2851958828669%29_%28cropped%29.jpg",
+    "larry_bird":               "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Larrybird.jpg/500px-Larrybird.jpg",
+    "kareem_abdul_jabbar":      "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Kareem_Abdul-Jabbar_May_2014.jpg/500px-Kareem_Abdul-Jabbar_May_2014.jpg",
+    "julius_erving":            "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Julius_Erving_2016.jpg/500px-Julius_Erving_2016.jpg",
+    "moses_malone":             "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Moses_Malone_cropped_portrait.jpg/500px-Moses_Malone_cropped_portrait.jpg",
+    "oscar_robertson":          "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Oscar_Robertson_2024.jpg/500px-Oscar_Robertson_2024.jpg",
+    "jerry_west":               "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Jerry_West_1972.jpeg/500px-Jerry_West_1972.jpeg",
+    "elgin_baylor":             "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Elgin_Baylor_Night_program-%28cropped%29.jpg/500px-Elgin_Baylor_Night_program-%28cropped%29.jpg",
+    "bill_russell":             "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Bill_russell_dribbling_%28cropped%29.jpg/500px-Bill_russell_dribbling_%28cropped%29.jpg",
+    "wilt_chamberlain":         "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg/500px-Wilt_Chamberlain_1960_%28cropped%29_%28cropped%29.jpg",
+    "pete_maravich":            "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Pete_Maravich_1977.jpeg/500px-Pete_Maravich_1977.jpeg",
+    "george_gervin":            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/George_Gervin_ABA.jpeg/500px-George_Gervin_ABA.jpeg",
+    "nate_archibald":           "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Nate_Archibald_1974.jpeg/500px-Nate_Archibald_1974.jpeg",
+    "bob_mcadoo":               "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Mcadoo_1973.jpg/500px-Mcadoo_1973.jpg",
+    "elvin_hayes":              "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Elvin_Hayes_1975.jpeg/500px-Elvin_Hayes_1975.jpeg",
+    "bob_cousy":                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Bob_Cousy_%281%29.jpeg/500px-Bob_Cousy_%281%29.jpeg",
+    "rick_barry":               "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Rick_Barry.jpg/500px-Rick_Barry.jpg",
+    "dave_cowens":              "https://upload.wikimedia.org/wikipedia/commons/5/5e/Dave_Cowens_-_2005_NBA_Legends_Tour_-_1-21-05.jpg",
+    "bill_walton":              "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Bill_walton_blazers_photo.jpg/500px-Bill_walton_blazers_photo.jpg",
+    "walt_frazier":             "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Walt_Frazier_%28cropped%29.jpg/500px-Walt_Frazier_%28cropped%29.jpg",
+    "george_mikan":             "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/George_Mikan_1945.jpeg/500px-George_Mikan_1945.jpeg",
+    "bob_pettit":               "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Bob_Pettit_1961.jpeg/500px-Bob_Pettit_1961.jpeg",
+    "willis_reed":              "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Willis_Reed_1972_publicity_photo.jpg/500px-Willis_Reed_1972_publicity_photo.jpg",
+    "dan_issel":                "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Dan_Issel_%281%29.jpeg/500px-Dan_Issel_%281%29.jpeg",
+    "artis_gilmore":            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Artis_Gilmore.jpg/500px-Artis_Gilmore.jpg",
 }
 
-ROUND_TIME = 20  # seconds per question
+ROUND_TIME = 20
 
 # ---------------------------------------------------------------------------
 # Cog
@@ -352,10 +338,6 @@ class NBARoster(commands.Cog):
         self.bot = bot
         self._games: Dict[int, dict] = {}
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-
     def _image_dir(self) -> Path:
         return cog_data_path(self) / "images"
 
@@ -367,9 +349,6 @@ class NBARoster(commands.Cog):
         return None
 
     async def _download_image(self, session: aiohttp.ClientSession, url: str, slug: str) -> bool:
-        """Download an image from url and save locally.
-        Retries on HTTP 429 with Retry-After backoff.
-        Rejects non-image responses (HTML error pages, etc.)."""
         url_path = url.split("?")[0]
         ext = url_path.rsplit(".", 1)[-1].lower()
         if ext not in ("jpg", "jpeg", "png", "webp"):
@@ -391,7 +370,6 @@ class NBARoster(commands.Cog):
                         continue
                     if resp.status != 200:
                         return False
-                    # Reject anything that isn't an image (e.g. HTML "file not found" pages)
                     content_type = resp.headers.get("Content-Type", "")
                     if "image" not in content_type:
                         return False
@@ -407,12 +385,7 @@ class NBARoster(commands.Cog):
         return False
 
     def _available_players(self) -> List[Dict]:
-        """Return only players who have a locally cached image."""
         return [p for p in PLAYERS if self._image_path(p["slug"]) is not None]
-
-    # ------------------------------------------------------------------
-    # Commands — main group
-    # ------------------------------------------------------------------
 
     @commands.group(name="nba", aliases=["nbag", "nbaplay", "nbaguess"], invoke_without_command=True)
     @commands.guild_only()
@@ -420,10 +393,6 @@ class NBARoster(commands.Cog):
         """NBA Player Photo Quiz commands.
         Run `[p]nba setup` once (admin) to download images, then `[p]nba start` to play."""
         await ctx.send_help(ctx.command)
-
-    # ------------------------------------------------------------------
-    # Setup
-    # ------------------------------------------------------------------
 
     @nba.command(name="setup")
     @commands.admin_or_permissions(administrator=True)
@@ -437,7 +406,7 @@ class NBARoster(commands.Cog):
             title="📥  Downloading NBA Player Photos",
             description=(
                 f"Downloading photos for **{total}** players.\n"
-                "This takes **3–6 minutes** — please be patient and don't run it again!"
+                "This takes **3–6 minutes** — please be patient!"
             ),
             colour=0x1D428A,
         )
@@ -451,7 +420,7 @@ class NBARoster(commands.Cog):
         connector = aiohttp.TCPConnector(limit=5)
         async with aiohttp.ClientSession(
             connector=connector,
-            headers={"User-Agent": "NBAPlayerQuizBot/1.0 (Red-DiscordBot cog by jaffar21)"},
+            headers={"User-Agent": "Mozilla/5.0 NBAPlayerQuizBot/2.0 (Red-DiscordBot cog by jaffar21)"},
         ) as session:
             for i, player in enumerate(PLAYERS, 1):
                 slug = player["slug"]
@@ -515,10 +484,6 @@ class NBARoster(commands.Cog):
         result_embed.set_footer(text="jaffar21")
         await status_msg.edit(embed=result_embed)
 
-    # ------------------------------------------------------------------
-    # Start
-    # ------------------------------------------------------------------
-
     @nba.command(name="start")
     @commands.guild_only()
     async def nba_start(self, ctx: commands.Context, target: int = 10):
@@ -562,10 +527,6 @@ class NBARoster(commands.Cog):
         await asyncio.sleep(3)
         await self._next_round(guild_id, ctx.channel)
 
-    # ------------------------------------------------------------------
-    # Stop
-    # ------------------------------------------------------------------
-
     @nba.command(name="stop")
     @commands.guild_only()
     async def nba_stop(self, ctx: commands.Context):
@@ -577,13 +538,8 @@ class NBARoster(commands.Cog):
         game = self._games[guild_id]
         if game.get("round_task") and not game["round_task"].done():
             game["round_task"].cancel()
-        channel = self.bot.get_channel(game["channel_id"])
-        await self._end_game(guild_id, channel, reason="stopped")
+        self._games.pop(guild_id, None)
         await ctx.send("🛑 Game stopped.")
-
-    # ------------------------------------------------------------------
-    # Scores
-    # ------------------------------------------------------------------
 
     @nba.command(name="scores")
     @commands.guild_only()
@@ -594,10 +550,6 @@ class NBARoster(commands.Cog):
             await ctx.send("No game is running right now.")
             return
         await ctx.send(embed=self._build_scoreboard(self._games[guild_id]))
-
-    # ------------------------------------------------------------------
-    # Skip
-    # ------------------------------------------------------------------
 
     @nba.command(name="skip")
     @commands.guild_only()
@@ -622,10 +574,6 @@ class NBARoster(commands.Cog):
         await asyncio.sleep(1)
         await self._next_round(guild_id, channel)
 
-    # ------------------------------------------------------------------
-    # Clear Images
-    # ------------------------------------------------------------------
-
     @nba.command(name="clearimages")
     @commands.admin_or_permissions(administrator=True)
     async def nba_clearimages(self, ctx: commands.Context):
@@ -645,10 +593,6 @@ class NBARoster(commands.Cog):
             f"🗑️ Cleared **{deleted}** cached player images.\n"
             "Run `[p]nba setup` to re-download everything fresh."
         )
-
-    # ------------------------------------------------------------------
-    # Game logic
-    # ------------------------------------------------------------------
 
     def _pick_player(self, game: dict) -> Optional[Dict]:
         pool = game["pool"]
@@ -689,7 +633,7 @@ class NBARoster(commands.Cog):
             player = self._pick_player(game)
             if player is None:
                 await channel.send("⚠️ No player images found. Run `[p]nba setup` first.")
-                await self._end_game(guild_id, channel, reason="no_images")
+                self._games.pop(guild_id, None)
                 return
 
         game["current_player"] = player
@@ -732,26 +676,6 @@ class NBARoster(commands.Cog):
         await asyncio.sleep(1.5)
         await self._next_round(guild_id, channel)
 
-    async def _end_game(self, guild_id: int, channel: discord.TextChannel, reason: str = "winner"):
-        game = self._games.pop(guild_id, None)
-        if not game or reason == "stopped":
-            return
-
-        embed = self._build_scoreboard(game)
-        embed.title = "🏆  Game Over — Final Scores"
-        if reason == "winner" and game["scores"]:
-            winner_id = max(game["scores"], key=game["scores"].get)
-            pts = game["scores"][winner_id]
-            embed.description = (
-                f"🎉 <@{winner_id}> wins with **{pts} points**!\n\n"
-                + (embed.description or "")
-            )
-        await channel.send(embed=embed)
-
-    # ------------------------------------------------------------------
-    # Message listener
-    # ------------------------------------------------------------------
-
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if message.author.bot or not message.guild:
@@ -780,7 +704,7 @@ class NBARoster(commands.Cog):
                     f"🏆 **{message.author.display_name}** got it — **{player['name']}**! "
                     f"They reach **{pts} points** and WIN! 🎉"
                 )
-                await self._end_game(guild_id, message.channel, reason="winner")
+                await self._end_game(guild_id, message.channel)
             else:
                 await message.channel.send(
                     f"✅ **{message.author.display_name}** got it — **{player['name']}**! "
@@ -788,3 +712,18 @@ class NBARoster(commands.Cog):
                 )
                 await asyncio.sleep(1.5)
                 await self._next_round(guild_id, message.channel)
+
+    async def _end_game(self, guild_id: int, channel: discord.TextChannel):
+        game = self._games.pop(guild_id, None)
+        if not game:
+            return
+        embed = self._build_scoreboard(game)
+        embed.title = "🏆  Game Over — Final Scores"
+        if game["scores"]:
+            winner_id = max(game["scores"], key=game["scores"].get)
+            pts = game["scores"][winner_id]
+            embed.description = (
+                f"🎉 <@{winner_id}> wins with **{pts} points**!\n\n"
+                + (embed.description or "")
+            )
+        await channel.send(embed=embed)
