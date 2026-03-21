@@ -1587,25 +1587,36 @@ class F1Drivers(commands.Cog):
         return None
 
     async def _download_image(self, session: aiohttp.ClientSession, url: str, slug: str) -> bool:
-        """Download an image from url and save it locally. Returns True on success."""
-        # Detect extension from URL
+        """Download an image from url and save it locally.
+        Automatically retries on HTTP 429 (rate limit), respecting Retry-After header.
+        Returns True on success."""
         url_path = url.split("?")[0]
         ext = url_path.rsplit(".", 1)[-1].lower()
         if ext not in ("jpg", "jpeg", "png", "webp"):
             ext = "jpg"
 
         dest = self._image_dir() / f"{slug}.{ext}"
-        try:
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
-                if resp.status != 200:
-                    return False
-                data = await resp.read()
-                if len(data) < 1000:
-                    return False
-                dest.write_bytes(data)
-                return True
-        except Exception:
-            return False
+        backoff = 5.0
+        for attempt in range(4):
+            try:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+                    if resp.status == 429:
+                        retry_after = float(resp.headers.get("Retry-After", backoff))
+                        await asyncio.sleep(retry_after)
+                        backoff = min(backoff * 2, 60.0)
+                        continue
+                    if resp.status != 200:
+                        return False
+                    data = await resp.read()
+                    if len(data) < 1000:
+                        return False
+                    dest.write_bytes(data)
+                    return True
+            except Exception:
+                if attempt < 3:
+                    await asyncio.sleep(backoff)
+                    backoff = min(backoff * 2, 60.0)
+        return False
 
     def _available_drivers(self) -> List[Dict]:
         """Return only drivers who have a locally cached image."""
@@ -1636,7 +1647,10 @@ class F1Drivers(commands.Cog):
         total = len(DRIVERS)
         embed = discord.Embed(
             title="📥  Downloading Driver Portraits",
-            description=f"Downloading portraits for **{total}** drivers. This will only take a moment...",
+            description=(
+                f"Downloading portraits for **{total}** drivers.\n"
+                "This takes **2–4 minutes** — please be patient and don't run it again!"
+            ),
             colour=0xE8002D,
         )
         embed.set_footer(text="jaffar21")
@@ -1687,7 +1701,7 @@ class F1Drivers(commands.Cog):
                     except discord.HTTPException:
                         pass
 
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.5)
 
         # Final report
         available = len(self._available_drivers())
