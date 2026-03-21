@@ -3,6 +3,7 @@ import os
 import random
 import unicodedata
 import re
+import urllib.parse
 from pathlib import Path
 from typing import Optional, Dict, List
 
@@ -1338,7 +1339,8 @@ DRIVERS = _UNIQUE_DRIVERS
 # Cog
 # ---------------------------------------------------------------------------
 
-WIKI_API = "https://en.wikipedia.org/w/api.php"
+WIKI_REST = "https://en.wikipedia.org/api/rest_v1/page/summary/{}"
+WIKI_API  = "https://en.wikipedia.org/w/api.php"   # fallback
 ROUND_TIME = 20  # seconds per question
 
 
@@ -1369,7 +1371,28 @@ class F1Drivers(commands.Cog):
         return None
 
     async def _fetch_wiki_image_url(self, session: aiohttp.ClientSession, wiki_title: str) -> Optional[str]:
-        """Query Wikipedia API and return the thumbnail URL for a page."""
+        """Fetch driver portrait URL using Wikipedia REST summary API (most reliable).
+        Falls back to the pageimages API if the REST call fails."""
+
+        # --- Primary: REST summary endpoint (returns infobox image for virtually every person article) ---
+        encoded = urllib.parse.quote(wiki_title.replace(" ", "_"), safe="():")
+        rest_url = WIKI_REST.format(encoded)
+        try:
+            async with session.get(
+                rest_url,
+                timeout=aiohttp.ClientTimeout(total=20),
+                headers={"User-Agent": "F1DriversTriviaBot/1.0 (Red-DiscordBot cog by jaffar21)"},
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    # thumbnail.source is already a sized Wikimedia URL — resize to 500px portrait quality
+                    thumb = data.get("thumbnail", {}).get("source")
+                    if thumb:
+                        return self._resize_wikimedia_url(thumb, 500)
+        except Exception:
+            pass
+
+        # --- Fallback: old pageimages API ---
         params = {
             "action": "query",
             "titles": wiki_title,
@@ -1379,19 +1402,33 @@ class F1Drivers(commands.Cog):
             "redirects": 1,
         }
         try:
-            async with session.get(WIKI_API, params=params, timeout=aiohttp.ClientTimeout(total=15)) as resp:
-                if resp.status != 200:
-                    return None
-                data = await resp.json()
-                pages = data.get("query", {}).get("pages", {})
-                for page in pages.values():
-                    thumb = page.get("thumbnail", {})
-                    src = thumb.get("source")
-                    if src:
-                        return src
+            async with session.get(
+                WIKI_API,
+                params=params,
+                timeout=aiohttp.ClientTimeout(total=20),
+                headers={"User-Agent": "F1DriversTriviaBot/1.0 (Red-DiscordBot cog by jaffar21)"},
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    pages = data.get("query", {}).get("pages", {})
+                    for page in pages.values():
+                        src = page.get("thumbnail", {}).get("source")
+                        if src:
+                            return src
         except Exception:
             pass
+
         return None
+
+    @staticmethod
+    def _resize_wikimedia_url(url: str, size: int) -> str:
+        """Rewrite a Wikimedia thumbnail URL to request a specific pixel width."""
+        # Wikimedia thumbnail URLs look like:
+        # https://upload.wikimedia.org/wikipedia/commons/thumb/a/bc/File.jpg/320px-File.jpg
+        # We swap the size segment to get the quality we want.
+        import re as _re
+        new_url = _re.sub(r"/\d+px-", f"/{size}px-", url)
+        return new_url
 
     async def _download_image(self, session: aiohttp.ClientSession, url: str, slug: str) -> bool:
         """Download an image from url and save it locally. Returns True on success."""
@@ -1454,7 +1491,7 @@ class F1Drivers(commands.Cog):
         failed = []
         skipped = 0
 
-        connector = aiohttp.TCPConnector(limit=8)
+        connector = aiohttp.TCPConnector(limit=15)
         async with aiohttp.ClientSession(
             connector=connector,
             headers={"User-Agent": "F1DriversTriviaBot/1.0 (Red-DiscordBot cog by jaffar21)"},
@@ -1494,7 +1531,7 @@ class F1Drivers(commands.Cog):
                     except discord.HTTPException:
                         pass
 
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.1)
 
         # Final report
         available = len(self._available_drivers())
@@ -1517,6 +1554,15 @@ class F1Drivers(commands.Cog):
             if len(failed) > 20:
                 fail_str += f" (+{len(failed)-20} more)"
             result_embed.add_field(name="Could Not Fetch", value=fail_str, inline=False)
+            result_embed.add_field(
+                name="Tip",
+                value=(
+                    "For any driver that failed, try `[p]f1drivers refresh <name>` individually.\n"
+                    "To wipe everything and retry from scratch: "
+                    "`[p]f1drivers clearimages` then `[p]f1drivers setup`."
+                ),
+                inline=False,
+            )
         result_embed.add_field(
             name="Next Step",
             value="Use `[p]f1drivers start` to start a game!",
@@ -1660,6 +1706,30 @@ class F1Drivers(commands.Cog):
                 await msg.edit(content=f"✅ Image refreshed for **{target['name']}**!")
             else:
                 await msg.edit(content=f"❌ Failed to download image for **{target['name']}**.")
+
+    @f1drivers.command(name="clearimages")
+    @commands.admin_or_permissions(administrator=True)
+    async def f1drivers_clearimages(self, ctx: commands.Context):
+        """Delete all locally cached driver images so setup downloads them fresh.
+
+        Run this if the old setup downloaded wrong or corrupted images,
+        then run `[p]f1drivers setup` again.
+        """
+        img_dir = self._image_dir()
+        if not img_dir.exists():
+            await ctx.send("No cached images found — nothing to clear.")
+            return
+
+        deleted = 0
+        for f in img_dir.iterdir():
+            if f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                f.unlink()
+                deleted += 1
+
+        await ctx.send(
+            f"🗑️ Cleared **{deleted}** cached driver images.\n"
+            f"Run `[p]f1drivers setup` to re-download everything fresh."
+        )
 
     # ------------------------------------------------------------------
     # Game logic
