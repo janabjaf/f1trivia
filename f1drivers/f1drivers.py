@@ -3,7 +3,6 @@ import os
 import random
 import unicodedata
 import re
-import urllib.parse
 from pathlib import Path
 from typing import Optional, Dict, List
 
@@ -1339,8 +1338,225 @@ DRIVERS = _UNIQUE_DRIVERS
 # Cog
 # ---------------------------------------------------------------------------
 
-WIKI_REST = "https://en.wikipedia.org/api/rest_v1/page/summary/{}"
-WIKI_API  = "https://en.wikipedia.org/w/api.php"   # fallback
+DRIVER_IMAGE_URLS = {
+    "max_verstappen": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg/500px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg",
+    "liam_lawson": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Liam_Lawson_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7793%29.jpg/500px-Liam_Lawson_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7793%29.jpg",
+    "lewis_hamilton": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Prime_Minister_Keir_Starmer_meets_Sir_Lewis_Hamilton_%2854566928382%29_%28cropped%29.jpg/500px-Prime_Minister_Keir_Starmer_meets_Sir_Lewis_Hamilton_%2854566928382%29_%28cropped%29.jpg",
+    "charles_leclerc": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_%28cropped2%29.jpg/500px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3978_by_Stepro_%28cropped2%29.jpg",
+    "lando_norris": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3968_by_Stepro_%28cropped2%29.jpg/500px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3968_by_Stepro_%28cropped2%29.jpg",
+    "oscar_piastri": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/2026_Chinese_GP_-_Oscar_Piastri_%28cropped%29_%28cropped%29.jpg/500px-2026_Chinese_GP_-_Oscar_Piastri_%28cropped%29_%28cropped%29.jpg",
+    "george_russell": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/KingsLeonSilverstne040724_%2828_of_112%29_%2853838006028%29_%28cropped%29.jpg/500px-KingsLeonSilverstne040724_%2828_of_112%29_%2853838006028%29_%28cropped%29.jpg",
+    "kimi_antonelli": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Kimi_Antonelli_at_the_2025_US_Grand_Prix_in_Austin%2C_TX_%28cropped%29.jpg/500px-Kimi_Antonelli_at_the_2025_US_Grand_Prix_in_Austin%2C_TX_%28cropped%29.jpg",
+    "fernando_alonso": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Fernando_Alonso_racing_at_the_2024_F1_in_Schools_World_Finals_%28cropped%29.jpg/500px-Fernando_Alonso_racing_at_the_2024_F1_in_Schools_World_Finals_%28cropped%29.jpg",
+    "lance_stroll": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/2025_Japan_GP_-_Aston_Martin_-_Lance_Stroll_-_Fanzone_Stage_%28cropped%29.jpg/500px-2025_Japan_GP_-_Aston_Martin_-_Lance_Stroll_-_Fanzone_Stage_%28cropped%29.jpg",
+    "pierre_gasly": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/2022_French_Grand_Prix_%2852279065728%29_%28midcrop%29.png/500px-2022_French_Grand_Prix_%2852279065728%29_%28midcrop%29.png",
+    "jack_doohan": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Jack_Doohan_2023.jpg/500px-Jack_Doohan_2023.jpg",
+    "alex_albon": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Alex_Albon_%28cropped%29.jpg/500px-Alex_Albon_%28cropped%29.jpg",
+    "carlos_sainz": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Formula1Gabelhofen2022_%2804%29_%28cropped2%29.jpg/500px-Formula1Gabelhofen2022_%2804%29_%28cropped2%29.jpg",
+    "esteban_ocon": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Esteban_Ocon_2024_Suzuka_%28cropped%29.jpg/500px-Esteban_Ocon_2024_Suzuka_%28cropped%29.jpg",
+    "yuki_tsunoda": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Yuki_Tsunoda_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8096%29.jpg/500px-Yuki_Tsunoda_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8096%29.jpg",
+    "isack_hadjar": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Isack_Hadjar_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8753%29_%28cropped%29.jpg/500px-Isack_Hadjar_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8753%29_%28cropped%29.jpg",
+    "nico_hulkenberg": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Nico_Hulkenberg_2016_Malaysia.jpg/500px-Nico_Hulkenberg_2016_Malaysia.jpg",
+    "gabriel_bortoleto": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Gabriel_Bortoleto_%28cropped%29.jpg/500px-Gabriel_Bortoleto_%28cropped%29.jpg",
+    "oliver_bearman": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/2025_Japan_GP_-_Haas_-_Oliver_Bearman_-_Thursday_%28cropped%29.jpg/500px-2025_Japan_GP_-_Haas_-_Oliver_Bearman_-_Thursday_%28cropped%29.jpg",
+    "sebastian_vettel": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Sebastian_Vettel_-_2022236172324_2022-08-24_Champions_for_Charity_-_Sven_-_1D_X_MK_II_-_0418_-_B70I2428_%28cropped%29.jpg/500px-Sebastian_Vettel_-_2022236172324_2022-08-24_Champions_for_Charity_-_Sven_-_1D_X_MK_II_-_0418_-_B70I2428_%28cropped%29.jpg",
+    "kimi_raikkonen": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/F12019_Schloss_Gabelhofen_%2822%29_%28cropped%29.jpg/500px-F12019_Schloss_Gabelhofen_%2822%29_%28cropped%29.jpg",
+    "jenson_button": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Jenson_Button_2024_WEC_Fuji.jpg/500px-Jenson_Button_2024_WEC_Fuji.jpg",
+    "nico_rosberg": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Nico_Rosberg_2016.jpg/500px-Nico_Rosberg_2016.jpg",
+    "mark_webber": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Mark_Webber_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8720%29.jpg/500px-Mark_Webber_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8720%29.jpg",
+    "felipe_massa": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Felipe_Massa.jpg/500px-Felipe_Massa.jpg",
+    "rubens_barrichello": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Rubinho.jpg/500px-Rubinho.jpg",
+    "michael_schumacher": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Michael_Schumacher_china_2012_rotated.png/500px-Michael_Schumacher_china_2012_rotated.png",
+    "mika_hakkinen": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Mika_H%C3%A4kkinen_Champions_for_Charity_2016-07-27.jpg/500px-Mika_H%C3%A4kkinen_Champions_for_Charity_2016-07-27.jpg",
+    "david_coulthard": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/David_Coulthard_at_the_2025_Adelaide_Grand_Final_Parade_-_12.jpg/500px-David_Coulthard_at_the_2025_Adelaide_Grand_Final_Parade_-_12.jpg",
+    "ralf_schumacher": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Ralf_Schumacher%2C_2016.png/500px-Ralf_Schumacher%2C_2016.png",
+    "giancarlo_fisichella": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Giancarlo_Fisichella_2012_WEC_Fuji.jpg/500px-Giancarlo_Fisichella_2012_WEC_Fuji.jpg",
+    "heinz_harold_frentzen": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Heinz-Harald_Frentzen_a_%28cropped%29.jpg/500px-Heinz-Harald_Frentzen_a_%28cropped%29.jpg",
+    "eddie_irvine": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Eddie_Irvine_after_the_1999_Australian_Grand_Prix.jpg",
+    "damon_hill": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Damon_Hill_at_the_Atlassian_Williams_Racing_Fan_Zone_of_2026_%28028A8247%29.jpg/500px-Damon_Hill_at_the_Atlassian_Williams_Racing_Fan_Zone_of_2026_%28028A8247%29.jpg",
+    "nigel_mansell": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Nigel_Mansell_-_Mexican_Grand_Prix_01_%28cropped%29.jpeg/500px-Nigel_Mansell_-_Mexican_Grand_Prix_01_%28cropped%29.jpeg",
+    "alain_prost": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Festival_automobile_international_2015_-_Photocall_-_065_%28cropped3%29.jpg/500px-Festival_automobile_international_2015_-_Photocall_-_065_%28cropped3%29.jpg",
+    "ayrton_senna": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Ayrton_Senna_9_%28cropped%29.jpg/500px-Ayrton_Senna_9_%28cropped%29.jpg",
+    "nelson_piquet": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Cerimonia_de_entrega_da_medalha_Bras%C3%ADlia_60_anos_-_16.jpg/500px-Cerimonia_de_entrega_da_medalha_Bras%C3%ADlia_60_anos_-_16.jpg",
+    "jackie_stewart": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Jackie_Stewart_at_the_2014_WEC_Silverstone_round.jpg/500px-Jackie_Stewart_at_the_2014_WEC_Silverstone_round.jpg",
+    "jim_clark": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Jim_Clark_in_1963_%28cropped%29.JPG/500px-Jim_Clark_in_1963_%28cropped%29.JPG",
+    "juan_manuel_fangio": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Fangio_in_1955_%28cropped%29.jpg/500px-Fangio_in_1955_%28cropped%29.jpg",
+    "jack_brabham": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/BrabhamJack1966B.jpg/500px-BrabhamJack1966B.jpg",
+    "stirling_moss": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Stirling_Moss.jpg/500px-Stirling_Moss.jpg",
+    "graham_hill": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Graham_Hill_Bestanddeelnr_924-6564.jpg/500px-Graham_Hill_Bestanddeelnr_924-6564.jpg",
+    "emerson_fittipaldi": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Emerson_Fittipaldi_in_2020_%28cropped%29.JPG/500px-Emerson_Fittipaldi_in_2020_%28cropped%29.JPG",
+    "mario_andretti": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Mario_Andretti_Goodwood_Festival_of_Speed_2021_%28cropped%29.jpg/500px-Mario_Andretti_Goodwood_Festival_of_Speed_2021_%28cropped%29.jpg",
+    "gilles_villeneuve": "https://upload.wikimedia.org/wikipedia/en/3/3f/Gilles_Villeneuve_1979_Portrait.jpg",
+    "james_hunt": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/J._Hunt_in_1977_%28cropped%29.jpg/500px-J._Hunt_in_1977_%28cropped%29.jpg",
+    "niki_lauda": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Lauda_at_1982_Dutch_Grand_Prix.jpg/500px-Lauda_at_1982_Dutch_Grand_Prix.jpg",
+    "jochen_rindt": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Rindt_at_1970_Dutch_Grand_Prix_%282C%29.jpg/500px-Rindt_at_1970_Dutch_Grand_Prix_%282C%29.jpg",
+    "ronnie_peterson": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Peterson_at_1978_Dutch_Grand_Prix.jpg/500px-Peterson_at_1978_Dutch_Grand_Prix.jpg",
+    "carlos_reutemann": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Reutemann_1981.jpg/500px-Reutemann_1981.jpg",
+    "alan_jones": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Jones_alan.JPG/500px-Jones_alan.JPG",
+    "keke_rosberg": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Anefo_932-2378_Keke_Rosberg%2C_Zandvoort%2C_03-07-1982_-_Restoration.jpg/500px-Anefo_932-2378_Keke_Rosberg%2C_Zandvoort%2C_03-07-1982_-_Restoration.jpg",
+    "rene_arnoux": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Rene_Arnoux_WSR2008_HU.png/500px-Rene_Arnoux_WSR2008_HU.png",
+    "didier_pironi": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Pironi_celebrating_at_1982_Dutch_Grand_Prix_%28cropped%29.jpg/500px-Pironi_celebrating_at_1982_Dutch_Grand_Prix_%28cropped%29.jpg",
+    "elio_de_angelis": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Anefo_932-2371_Elio_de_Angelis_03.07.1982.jpg/500px-Anefo_932-2371_Elio_de_Angelis_03.07.1982.jpg",
+    "riccardo_patrese": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Riccardo_Patrese_in_the_paddock_before_the_1993_British_Grand_Prix_%2833686653515%29_%28Cropped%29.jpg",
+    "gerhard_berger": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Gerhard_Berger_1991USA_%28cropped%29.jpg/500px-Gerhard_Berger_1991USA_%28cropped%29.jpg",
+    "michele_alboreto": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/SCA_0029_MICHELE_ALBORETO_-_Ferrari_F_1-87_-_1987_neg._125_10x15_R_%28cropped%29.JPG/500px-SCA_0029_MICHELE_ALBORETO_-_Ferrari_F_1-87_-_1987_neg._125_10x15_R_%28cropped%29.JPG",
+    "derek_warwick": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Derek_Warwick_Silverstone_2014.JPG/500px-Derek_Warwick_Silverstone_2014.JPG",
+    "thierry_boutsen": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Thierry_Boutsen_at_the_2026_Adelaide_Motorsport_Festival_%28028A6537%29.jpg/500px-Thierry_Boutsen_at_the_2026_Adelaide_Motorsport_Festival_%28028A6537%29.jpg",
+    "ivan_capelli": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Capelli_1991_%28cropped%29.jpg/500px-Capelli_1991_%28cropped%29.jpg",
+    "jean_alesi": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Jean_Alesi%2C_GIMS_2019%2C_Le_Grand-Saconnex_%28GIMS0047%29.jpg/500px-Jean_Alesi%2C_GIMS_2019%2C_Le_Grand-Saconnex_%28GIMS0047%29.jpg",
+    "martin_brundle": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Martin_Brundle_2021_%2851591210921%29_%28cropped%29.jpg/500px-Martin_Brundle_2021_%2851591210921%29_%28cropped%29.jpg",
+    "johnny_herbert": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Johnny_Herbert_%2831729263593%29.jpg/500px-Johnny_Herbert_%2831729263593%29.jpg",
+    "mika_salo": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Mika_Salo_Le_Mans_2009_cropped.jpg/500px-Mika_Salo_Le_Mans_2009_cropped.jpg",
+    "jarno_trulli": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/12._Internationale_Sportnacht_Davos_2014_%2815246044859%29_%28cropped%29.jpg/500px-12._Internationale_Sportnacht_Davos_2014_%2815246044859%29_%28cropped%29.jpg",
+    "olivier_panis": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Olivier_Panis_%28cropped%29.jpg/500px-Olivier_Panis_%28cropped%29.jpg",
+    "alex_wurz": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Alexander_Wurz_-_2016_24_Hours_of_Le_Mans_-_Pit_Walk_%28cropped%29.jpg/500px-Alexander_Wurz_-_2016_24_Hours_of_Le_Mans_-_Pit_Walk_%28cropped%29.jpg",
+    "nick_heidfeld": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Nick_Heidfeld_Goodwood_Festival_of_Speed_2019_%2848242681251%29.jpg/500px-Nick_Heidfeld_Goodwood_Festival_of_Speed_2019_%2848242681251%29.jpg",
+    "robert_kubica": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Robert_Kubica_at_Monza_2023.jpg/500px-Robert_Kubica_at_Monza_2023.jpg",
+    "heikki_kovalainen": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Effect_20190609_091716.jpg/500px-Effect_20190609_091716.jpg",
+    "timo_glock": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/2025-04-26_Motorsport%2C_DTM%2C_Oschersleben_STP_2988_%28cropped%29.jpg/500px-2025-04-26_Motorsport%2C_DTM%2C_Oschersleben_STP_2988_%28cropped%29.jpg",
+    "vitantonio_liuzzi": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Vitantonio_Liuzzi_2011_Malaysia.jpg/500px-Vitantonio_Liuzzi_2011_Malaysia.jpg",
+    "sebastien_buemi": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Ryo_Hirakawa%2C_Brendon_Hartley_%26_Sebastien_Buemi_take_the_podium_for_2nd_in_Hypercar_at_the_2023_Le_Mans_%2853468554280%29_%28cropped%29.jpg/500px-Ryo_Hirakawa%2C_Brendon_Hartley_%26_Sebastien_Buemi_take_the_podium_for_2nd_in_Hypercar_at_the_2023_Le_Mans_%2853468554280%29_%28cropped%29.jpg",
+    "jaime_alguersuari": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Jaime_Alguersuari_Canada_2010_cropped.jpg/500px-Jaime_Alguersuari_Canada_2010_cropped.jpg",
+    "paul_di_resta": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Paul_di_Resta_2022_%28cropped%29.jpg/500px-Paul_di_Resta_2022_%28cropped%29.jpg",
+    "daniel_ricciardo": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Daniel_Ricciardo_January_2024.jpg/500px-Daniel_Ricciardo_January_2024.jpg",
+    "pastor_maldonado": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Pastor_Maldonado_2015_Malaysia.jpg/500px-Pastor_Maldonado_2015_Malaysia.jpg",
+    "romain_grosjean": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Grosjean_at_2024_Chevrolet_Detroit_Grand_Prix.jpg/500px-Grosjean_at_2024_Chevrolet_Detroit_Grand_Prix.jpg",
+    "kamui_kobayashi": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Kamui_Kobayashi_2024_WEC_Fuji_2.jpg/500px-Kamui_Kobayashi_2024_WEC_Fuji_2.jpg",
+    "sergio_perez": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/2021_US_GP_driver_parade_%28cropped2%29.jpg/500px-2021_US_GP_driver_parade_%28cropped2%29.jpg",
+    "valtteri_bottas": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Valtteri_Bottas_at_the_2026_Adelaide_Motorsport_Festival_%28028A7567%29.jpg/500px-Valtteri_Bottas_at_the_2026_Adelaide_Motorsport_Festival_%28028A7567%29.jpg",
+    "daniil_kvyat": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Daniil_Kvyat_2024_Suzuka_A2RL_%28cropped%29.jpg/500px-Daniil_Kvyat_2024_Suzuka_A2RL_%28cropped%29.jpg",
+    "felipe_nasr": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Piloto_Felipe_Nasr_fala_%C3%A0_imprensa_ap%C3%B3s_encontro_com_Temer_%2828412246304%29_%28cropped%29.jpg/500px-Piloto_Felipe_Nasr_fala_%C3%A0_imprensa_ap%C3%B3s_encontro_com_Temer_%2828412246304%29_%28cropped%29.jpg",
+    "will_stevens": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Will_Stevens_2017.jpg/500px-Will_Stevens_2017.jpg",
+    "alexander_rossi": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Andretti_Autosport_Visit_180405-F-KS667-0012_%28cropped%29.jpg/500px-Andretti_Autosport_Visit_180405-F-KS667-0012_%28cropped%29.jpg",
+    "stoffel_vandoorne": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/2023-04-23_Motorsport%2C_ABB_FIA_Formula_E_World_Championship%2C_Berlin_E-Prix_2023_1DX_1774_by_Stepro_%28cropped%29.jpg/500px-2023-04-23_Motorsport%2C_ABB_FIA_Formula_E_World_Championship%2C_Berlin_E-Prix_2023_1DX_1774_by_Stepro_%28cropped%29.jpg",
+    "antonio_giovinazzi": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Antonio_Giovinazzi_-_Ferrari_499P_-_Hybrid_during_the_pitwalk_at_the_2023_Le_Mans_%2853468237574%29.jpg/500px-Antonio_Giovinazzi_-_Ferrari_499P_-_Hybrid_during_the_pitwalk_at_the_2023_Le_Mans_%2853468237574%29.jpg",
+    "brendon_hartley": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Brendon_Hartley_2024_WEC_Fuji.jpg/500px-Brendon_Hartley_2024_WEC_Fuji.jpg",
+    "sergey_sirotkin": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Sergey_Sirotkin_Moscow.jpg/500px-Sergey_Sirotkin_Moscow.jpg",
+    "vitaly_petrov": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Vitaly_Petrov_2010_Malaysia_%28cropped%29.jpg/500px-Vitaly_Petrov_2010_Malaysia_%28cropped%29.jpg",
+    "esteban_gutierrez": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/Esteban_Guti%C3%A9rrez_en_el_Gran_Premio_de_Italia_2019_%28cropped%29.jpg/500px-Esteban_Guti%C3%A9rrez_en_el_Gran_Premio_de_Italia_2019_%28cropped%29.jpg",
+    "marcus_ericsson": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Marcus_Ericsson_in_2023.jpg/500px-Marcus_Ericsson_in_2023.jpg",
+    "kevin_magnussen": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Kevin_Magnussen%2C_2019_Formula_One_Tests_Barcelona_%28cropped%29.jpg/500px-Kevin_Magnussen%2C_2019_Formula_One_Tests_Barcelona_%28cropped%29.jpg",
+    "jolyon_palmer": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Jolyon_Palmer_2016_Malaysia.jpg/500px-Jolyon_Palmer_2016_Malaysia.jpg",
+    "rio_haryanto": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Rio_Haryanto_2016_paddock.jpg/500px-Rio_Haryanto_2016_paddock.jpg",
+    "mick_schumacher": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Mick_Schumacher_2024_WEC_Fuji.jpg/500px-Mick_Schumacher_2024_WEC_Fuji.jpg",
+    "nikita_mazepin": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/%D0%9D%D0%B8%D0%BA%D0%B8%D1%82%D0%B0_%D0%9C%D0%B0%D0%B7%D0%B5%D0%BF%D0%B8%D0%BD_-_%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D0%B2%D1%8C%D1%8E_-_2019%2C_02.jpg/500px-%D0%9D%D0%B8%D0%BA%D0%B8%D1%82%D0%B0_%D0%9C%D0%B0%D0%B7%D0%B5%D0%BF%D0%B8%D0%BD_-_%D0%B8%D0%BD%D1%82%D0%B5%D1%80%D0%B2%D1%8C%D1%8E_-_2019%2C_02.jpg",
+    "nicholas_latifi": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Nicholas_Latifi_at_Singapore_in_2022_%28cropped%29.jpg/500px-Nicholas_Latifi_at_Singapore_in_2022_%28cropped%29.jpg",
+    "guanyu_zhou": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Zhou_Guanyu_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A7999%29.jpg/500px-Zhou_Guanyu_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A7999%29.jpg",
+    "nyck_de_vries": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/TGR_Nyck_de_Vries_240908.jpg/500px-TGR_Nyck_de_Vries_240908.jpg",
+    "logan_sargeant": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/Logan_Sargeant_NYC_%28cropped%29.jpg/500px-Logan_Sargeant_NYC_%28cropped%29.jpg",
+    "zhou_guanyu": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Zhou_Guanyu_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A7999%29.jpg/500px-Zhou_Guanyu_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A7999%29.jpg",
+    "heinz_frentzen": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Heinz-Harald_Frentzen_a_%28cropped%29.jpg/500px-Heinz-Harald_Frentzen_a_%28cropped%29.jpg",
+    "pascal_wehrlein": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/2024-05-10_Motorsport%2C_ABB_FIA_Formula_E_World_Championship%2C_Berlin_E-Prix_2024_STP_2554_by_Stepro.jpg/500px-2024-05-10_Motorsport%2C_ABB_FIA_Formula_E_World_Championship%2C_Berlin_E-Prix_2024_STP_2554_by_Stepro.jpg",
+    "jean_eric_vergne": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/Jean-Eric_Vergne_2024_WEC_Fuji.jpg/500px-Jean-Eric_Vergne_2024_WEC_Fuji.jpg",
+    "jules_bianchi": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Jules_Bianchi_2012-1.JPG/500px-Jules_Bianchi_2012-1.JPG",
+    "adrian_sutil": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Adrian_Sutil.jpg/500px-Adrian_Sutil.jpg",
+    "bruno_senna": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Senna_by_United_Autosports_team_04.jpg/500px-Senna_by_United_Autosports_team_04.jpg",
+    "karun_chandhok": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Karun_Chandhok_Goodwood_Festival_of_Speed_2019_%2848242680701%29.jpg/500px-Karun_Chandhok_Goodwood_Festival_of_Speed_2019_%2848242680701%29.jpg",
+    "pedro_de_la_rosa": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Pedro_de_la_Rosa_2010_Malaysia.jpg/500px-Pedro_de_la_Rosa_2010_Malaysia.jpg",
+    "narain_karthikeyan": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Narain_Karthikeyan_2011_Malaysia2.jpg/500px-Narain_Karthikeyan_2011_Malaysia2.jpg",
+    "scott_speed": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Scott_Speed_Sonoma_2024.jpg/500px-Scott_Speed_Sonoma_2024.jpg",
+    "takuma_sato": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Takuma_Sato_%282021%29.jpg/500px-Takuma_Sato_%282021%29.jpg",
+    "nelson_piquet_jr": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Nelson_Piquet_Jr._2021.jpg/500px-Nelson_Piquet_Jr._2021.jpg",
+    "sebastien_bourdais": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sebastien_Bourdais_in_2021_%2851221641988%29_%28cropped%29.jpg/500px-Sebastien_Bourdais_in_2021_%2851221641988%29_%28cropped%29.jpg",
+    "anthony_davidson": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Anthony_Davidson_Goodwood_Festival_of_Speed_2019_%2848242774922%29.jpg/500px-Anthony_Davidson_Goodwood_Festival_of_Speed_2019_%2848242774922%29.jpg",
+    "christian_klien": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Christian_Klien_%2813994163352%29_%28cropped%29.jpg/500px-Christian_Klien_%2813994163352%29_%28cropped%29.jpg",
+    "tiago_monteiro": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Tiago_monteiro_spafrancorchamps2014_%28cropped%29.JPG/500px-Tiago_monteiro_spafrancorchamps2014_%28cropped%29.JPG",
+    "christijan_albers": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Christijan_Albers_2006_%28cropped%29.JPG/500px-Christijan_Albers_2006_%28cropped%29.JPG",
+    "giedo_van_der_garde": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Giedo_van_der_Garde.jpg/500px-Giedo_van_der_Garde.jpg",
+    "max_chilton": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Max_Chilton_2.jpg/500px-Max_Chilton_2.jpg",
+    "charles_pic": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Charles_Pic_Moscow_2013.jpg/500px-Charles_Pic_Moscow_2013.jpg",
+    "zsolt_baumgartner": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/ChampCar_2007_Baumgartner.jpg/500px-ChampCar_2007_Baumgartner.jpg",
+    "enrique_bernoldi": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Enrique_Bernoldi_2007_Curitiba.jpg/500px-Enrique_Bernoldi_2007_Curitiba.jpg",
+    "marc_gene": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Marc_Gene_2007_Montjuic.jpg/500px-Marc_Gene_2007_Montjuic.jpg",
+    "luca_badoer": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Luca_Badoer_2021_%28cropped%29.jpg/500px-Luca_Badoer_2021_%28cropped%29.jpg",
+    "jacques_villeneuve": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Jacques_Villeneuve_August_2011.jpg/500px-Jacques_Villeneuve_August_2011.jpg",
+    "juan_pablo_montoya": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/DSC1509_%2851683678455%29%28cropped%29.jpg/500px-DSC1509_%2851683678455%29%28cropped%29.jpg",
+    "jos_verstappen": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Jos_Verstappen%2C_2006.jpg/500px-Jos_Verstappen%2C_2006.jpg",
+    "jan_magnussen": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Jan_Magnussen_%2837535519996%29_%28cropped%29.jpg/500px-Jan_Magnussen_%2837535519996%29_%28cropped%29.jpg",
+    "gianni_morbidelli": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Gianni_morbidelli_spafrancorchamps2014.JPG/500px-Gianni_morbidelli_spafrancorchamps2014.JPG",
+    "cristiano_da_matta": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Cdmlb06.jpg/500px-Cdmlb06.jpg",
+    "ralph_firman": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Ralph_Firman_2008_Super_GT.jpg/500px-Ralph_Firman_2008_Super_GT.jpg",
+    "justin_wilson": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Justin_Wilson_2013.jpg/500px-Justin_Wilson_2013.jpg",
+    "riccardo_zonta": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Ricardo_Zonta_2007_Curitiba.jpg/500px-Ricardo_Zonta_2007_Curitiba.jpg",
+    "michael_andretti": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Michael_Andretti_%2853785910028%29_%28cropped%29.jpg/500px-Michael_Andretti_%2853785910028%29_%28cropped%29.jpg",
+    "jody_scheckter": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Jody_Scheckter_during_the_1979_Monaco_Grand_Prix.jpg/500px-Jody_Scheckter_during_the_1979_Monaco_Grand_Prix.jpg",
+    "carlos_pace": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Jos%C3%A9_Carlos_Pace%2C_sem_data.tif/lossy-page1-330px-Jos%C3%A9_Carlos_Pace%2C_sem_data.tif.jpg",
+    "tom_pryce": "https://upload.wikimedia.org/wikipedia/en/0/04/Tom_Pryce_1974_British_Grand_Prix.jpg",
+    "gunnar_nilsson": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/1976-07-10_Gunnar_Nilsson_im_BMW_CSL_%28cropped%29.jpg/500px-1976-07-10_Gunnar_Nilsson_im_BMW_CSL_%28cropped%29.jpg",
+    "vittorio_brambilla": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Vittorio_Brambilla.jpg/500px-Vittorio_Brambilla.jpg",
+    "jo_siffert": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Siffert%2C_Joseph_1968.jpg/500px-Siffert%2C_Joseph_1968.jpg",
+    "peter_revson": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Peter_Revson_1973_N%C3%BCrburgring_a_%28cropped%29.jpg/500px-Peter_Revson_1973_N%C3%BCrburgring_a_%28cropped%29.jpg",
+    "henri_pescarolo": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/PescaroloHenry1973N%C3%BCrb.jpg/500px-PescaroloHenry1973N%C3%BCrb.jpg",
+    "rolf_stommelen": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Stommelen%2C_Rolf_am_1972-07-07.jpg/500px-Stommelen%2C_Rolf_am_1972-07-07.jpg",
+    "jean_pierre_beltoise": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Jean_Pierre_Beltoise_te_Zandvoort_1968.jpg/500px-Jean_Pierre_Beltoise_te_Zandvoort_1968.jpg",
+    "jo_bonnier": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/BonnierJo196608.jpg/500px-BonnierJo196608.jpg",
+    "jochen_mass": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Mass_at_1982_Dutch_Grand_Prix.jpg/500px-Mass_at_1982_Dutch_Grand_Prix.jpg",
+    "jean_pierre_jabouille": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/JeanPierreJabouille1975.jpg/500px-JeanPierreJabouille1975.jpg",
+    "jean_pierre_jarier": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Jean-Pierre_Jarier_en_1976.jpg/500px-Jean-Pierre_Jarier_en_1976.jpg",
+    "pedro_rodriguez": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Pedro_Rodr%C3%ADguez_1968_N%C3%BCrburgring-1_%28cropped%29.jpg/500px-Pedro_Rodr%C3%ADguez_1968_N%C3%BCrburgring-1_%28cropped%29.jpg",
+    "hans_stuck": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/HansJoachimStuck2008.jpg/500px-HansJoachimStuck2008.jpg",
+    "peter_gethin": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Peter_Gethin%2C_Bestanddeelnr_924-6614_%28cropped2%29.jpg/500px-Peter_Gethin%2C_Bestanddeelnr_924-6614_%28cropped2%29.jpg",
+    "john_surtees": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/John_Surtees.JPG/500px-John_Surtees.JPG",
+    "dan_gurney": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Dan_Gurney_%281970%29.jpg/500px-Dan_Gurney_%281970%29.jpg",
+    "bruce_mclaren": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/McLarenBruce.jpg/500px-McLarenBruce.jpg",
+    "lorenzo_bandini": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Bandini1966cropped.jpg",
+    "richie_ginther": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Richie_Ginther_and_Roger_Penske%2C_1964_%28cropped%29.jpg/500px-Richie_Ginther_and_Roger_Penske%2C_1964_%28cropped%29.jpg",
+    "innes_ireland": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Innes_Ireland.jpg/500px-Innes_Ireland.jpg",
+    "mike_spence": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Mike_Spence_%28cropped%29.jpg/500px-Mike_Spence_%28cropped%29.jpg",
+    "piers_courage": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Piers_Courage_1968_N%C3%BCrburgring.JPG/500px-Piers_Courage_1968_N%C3%BCrburgring.JPG",
+    "tony_brooks": "https://upload.wikimedia.org/wikipedia/en/8/8e/Tony_Brooks_1958_German_Grand_Prix.jpg",
+    "ludovico_scarfiotti": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Ludivico_Scarfiotti_1966_N%C3%BCrburgring.jpg",
+    "mike_hailwood": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Mike_Hailwood.jpg/500px-Mike_Hailwood.jpg",
+    "alberto_ascari": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Ascari_last_photo_in_car.jpg/500px-Ascari_last_photo_in_car.jpg",
+    "nino_farina": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Giuseppe_Farina_-_El_Gr%C3%A1fico_1750.jpg/500px-Giuseppe_Farina_-_El_Gr%C3%A1fico_1750.jpg",
+    "mike_hawthorn": "https://upload.wikimedia.org/wikipedia/en/9/99/Mike_Hawthorn.jpg",
+    "phil_hill": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Phil_Hill_1991_USA_%28cropped%29.jpg/500px-Phil_Hill_1991_USA_%28cropped%29.jpg",
+    "peter_collins": "https://upload.wikimedia.org/wikipedia/en/5/5e/Peter_Collins_car_racer.jpg",
+    "wolfgang_von_trips": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Wolfgang_von_Trips_in_1957.JPG/500px-Wolfgang_von_Trips_in_1957.JPG",
+    "luigi_musso": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Luigi_Musso.jpg",
+    "piero_taruffi": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Piero_Taruffi.jpg/500px-Piero_Taruffi.jpg",
+    "jose_froilan_gonzalez": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Jos%C3%A9_Froil%C3%A1n_Gonz%C3%A1lez_1950.jpg/500px-Jos%C3%A9_Froil%C3%A1n_Gonz%C3%A1lez_1950.jpg",
+    "maurice_trintignant": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Maurice_Trintignant_-_El_Gr%C3%A1fico_1801.jpg/500px-Maurice_Trintignant_-_El_Gr%C3%A1fico_1801.jpg",
+    "harry_schell": "https://upload.wikimedia.org/wikipedia/en/3/32/Harry_Schell_Sebring_1959.jpg",
+    "eugenio_castellotti": "https://upload.wikimedia.org/wikipedia/commons/7/75/Eugenio_Castellotti.jpg",
+    "david_purley": "https://upload.wikimedia.org/wikipedia/en/thumb/e/e9/Davidpurley.jpg/500px-Davidpurley.jpg",
+    "david_brabham": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/David_Brabham_at_the_2026_Adelaide_Motorsport_Festival_%28028A6665%29.jpg/500px-David_Brabham_at_the_2026_Adelaide_Motorsport_Festival_%28028A6665%29.jpg",
+    "martin_donnelly": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Martin_Donnelly_at_the_2026_Adelaide_Motorsport_Festival_%28028A6545%29.jpg/500px-Martin_Donnelly_at_the_2026_Adelaide_Motorsport_Festival_%28028A6545%29.jpg",
+    "stefan_johansson": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Stefan_Johansson_at_the_2026_Adelaide_Motorsport_Festival_%28028A6525%29.jpg/500px-Stefan_Johansson_at_the_2026_Adelaide_Motorsport_Festival_%28028A6525%29.jpg",
+    "pierluigi_martini": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Pierluigi_Martini_in_2016.jpg/500px-Pierluigi_Martini_in_2016.jpg",
+    "andrea_de_cesaris": "https://upload.wikimedia.org/wikipedia/commons/2/22/Andrea_De_Cesaris_1982.jpg",
+    "eddie_cheever": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Eddie_Cheever_Jr_2009_Indy_500_Second_Qual_Day.JPG/500px-Eddie_Cheever_Jr_2009_Indy_500_Second_Qual_Day.JPG",
+    "bertrand_gachot": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Bertrand_Gachot_-_1991_US_GP.jpg/500px-Bertrand_Gachot_-_1991_US_GP.jpg",
+    "eric_comas": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Comas_lm2005.jpg/500px-Comas_lm2005.jpg",
+    "aguri_suzuki": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Suzuki_Sepang_25.png/500px-Suzuki_Sepang_25.png",
+    "ukyo_katayama": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Ukyo_Katayama_2008.jpg/500px-Ukyo_Katayama_2008.jpg",
+    "mark_blundell": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Mark_Blundell_portrait_2011_%28cropped%29.jpg/500px-Mark_Blundell_portrait_2011_%28cropped%29.jpg",
+    "christian_fittipaldi": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Christian_Fittipaldi_2006_Curitiba.jpg/500px-Christian_Fittipaldi_2006_Curitiba.jpg",
+    "karl_wendlinger": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/GTS_class_winners_%2810th_overall%29_-_Karl_Wendlinger_-_Chrysler_Viper_GTS-R_-_on_the_podium_at_the_1999_Le_Mans_%2851897678180%29_%28cropped%29.jpg/500px-GTS_class_winners_%2810th_overall%29_-_Karl_Wendlinger_-_Chrysler_Viper_GTS-R_-_on_the_podium_at_the_1999_Le_Mans_%2851897678180%29_%28cropped%29.jpg",
+    "jj_lehto": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/JJ_Lehto_%28Petit_Le_Mans%2C_2004%29.jpg/500px-JJ_Lehto_%28Petit_Le_Mans%2C_2004%29.jpg",
+    "mika_salo2": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Mika_Salo_Le_Mans_2009_cropped.jpg/500px-Mika_Salo_Le_Mans_2009_cropped.jpg",
+    "pedro_lamy": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Pedro_Lamy_Le_Mans_drivers_parade_2011_crop.jpg",
+    "olivier_grouillard": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Andy_Wallace_%26_Olivier_Grouillard_on_the_podium_at_the_Norwich_Union_Empire_Trophy%2C_Silverstone_4_Hrs_1995_%2849890621322%29_%28cropped%29.jpg/500px-Andy_Wallace_%26_Olivier_Grouillard_on_the_podium_at_the_Norwich_Union_Empire_Trophy%2C_Silverstone_4_Hrs_1995_%2849890621322%29_%28cropped%29.jpg",
+    "emanuele_pirro": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Emanuele_Pirro_2012_WEC_Fuji_2_%28cropped%29.jpg/500px-Emanuele_Pirro_2012_WEC_Fuji_2_%28cropped%29.jpg",
+    "mauricio_gugelmin": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Gugelmin_%28cropped%29.jpg/500px-Gugelmin_%28cropped%29.jpg",
+    "roberto_moreno": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Roberto_Bud_suite_97.tif/lossy-page1-330px-Roberto_Bud_suite_97.tif.jpg",
+    "Alessandro_zanardi": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Alex_Zanardi_2019.jpg/500px-Alex_Zanardi_2019.jpg",
+    "john_watson": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Watson_at_1982_Dutch_Grand_Prix_%28cropped%29.jpg/500px-Watson_at_1982_Dutch_Grand_Prix_%28cropped%29.jpg",
+    "patrick_tambay": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Zandvoort_circuit_De_striptekenaar_Graton_in_de_pits%2C_NL-HlmNHA_54005237_-_Patrick_Tambay_%28cropped%29.JPG/500px-Zandvoort_circuit_De_striptekenaar_Graton_in_de_pits%2C_NL-HlmNHA_54005237_-_Patrick_Tambay_%28cropped%29.JPG",
+    "patrick_depailler": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/PatrickDepailler-ar.jpg/500px-PatrickDepailler-ar.jpg",
+    "jacques_laffite": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Jacques_Laffite_2015.jpg/500px-Jacques_Laffite_2015.jpg",
+    "stefan_bellof": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Stefan_Bellof_7508-cropped.jpg/500px-Stefan_Bellof_7508-cropped.jpg",
+    "marc_surer": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Marc_Surer_1982.jpg/500px-Marc_Surer_1982.jpg",
+    "manfred_winkelhock": "https://upload.wikimedia.org/wikipedia/en/9/98/Manfred_Winkelhock_1984.png",
+    "wilson_fittipaldi": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Wilson_Fittipaldi_J%C3%BAnior_2017.jpg/500px-Wilson_Fittipaldi_J%C3%BAnior_2017.jpg",
+    "philippe_streiff": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Festival_automobile_international_2014_-_Photocall_-_019.jpg/500px-Festival_automobile_international_2014_-_Photocall_-_019.jpg",
+    "jonathan_palmer": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Jonathan_Palmer_Profile.jpg/500px-Jonathan_Palmer_Profile.jpg",
+    "denny_hulme": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/HulmeDenis196508_%28cropped%29.jpg/500px-HulmeDenis196508_%28cropped%29.jpg",
+    "clay_regazzoni": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Anefo_924-6609_Clay_Reggazoni%2C_Catherine_Blaton%2C_Jacky_Ickx_Zandvoort_18_06_1971_-_Cropped.jpg/500px-Anefo_924-6609_Clay_Reggazoni%2C_Catherine_Blaton%2C_Jacky_Ickx_Zandvoort_18_06_1971_-_Cropped.jpg",
+    "chris_amon": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/AmonChris19730706.jpg/500px-AmonChris19730706.jpg",
+    "jacky_ickx": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Jacky_Ickx_Portr%C3%A4t_Mille_Miglia_2018.jpg/500px-Jacky_Ickx_Portr%C3%A4t_Mille_Miglia_2018.jpg",
+    "francois_cevert": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Francois_Cevert_1973.jpg/500px-Francois_Cevert_1973.jpg",
+}
 ROUND_TIME = 20  # seconds per question
 
 
@@ -1369,66 +1585,6 @@ class F1Drivers(commands.Cog):
             if p.exists():
                 return p
         return None
-
-    async def _fetch_wiki_image_url(self, session: aiohttp.ClientSession, wiki_title: str) -> Optional[str]:
-        """Fetch driver portrait URL using Wikipedia REST summary API (most reliable).
-        Falls back to the pageimages API if the REST call fails."""
-
-        # --- Primary: REST summary endpoint (returns infobox image for virtually every person article) ---
-        encoded = urllib.parse.quote(wiki_title.replace(" ", "_"), safe="():")
-        rest_url = WIKI_REST.format(encoded)
-        try:
-            async with session.get(
-                rest_url,
-                timeout=aiohttp.ClientTimeout(total=20),
-                headers={"User-Agent": "F1DriversTriviaBot/1.0 (Red-DiscordBot cog by jaffar21)"},
-            ) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    # thumbnail.source is already a sized Wikimedia URL — resize to 500px portrait quality
-                    thumb = data.get("thumbnail", {}).get("source")
-                    if thumb:
-                        return self._resize_wikimedia_url(thumb, 500)
-        except Exception:
-            pass
-
-        # --- Fallback: old pageimages API ---
-        params = {
-            "action": "query",
-            "titles": wiki_title,
-            "prop": "pageimages",
-            "format": "json",
-            "pithumbsize": 500,
-            "redirects": 1,
-        }
-        try:
-            async with session.get(
-                WIKI_API,
-                params=params,
-                timeout=aiohttp.ClientTimeout(total=20),
-                headers={"User-Agent": "F1DriversTriviaBot/1.0 (Red-DiscordBot cog by jaffar21)"},
-            ) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    pages = data.get("query", {}).get("pages", {})
-                    for page in pages.values():
-                        src = page.get("thumbnail", {}).get("source")
-                        if src:
-                            return src
-        except Exception:
-            pass
-
-        return None
-
-    @staticmethod
-    def _resize_wikimedia_url(url: str, size: int) -> str:
-        """Rewrite a Wikimedia thumbnail URL to request a specific pixel width."""
-        # Wikimedia thumbnail URLs look like:
-        # https://upload.wikimedia.org/wikipedia/commons/thumb/a/bc/File.jpg/320px-File.jpg
-        # We swap the size segment to get the quality we want.
-        import re as _re
-        new_url = _re.sub(r"/\d+px-", f"/{size}px-", url)
-        return new_url
 
     async def _download_image(self, session: aiohttp.ClientSession, url: str, slug: str) -> bool:
         """Download an image from url and save it locally. Returns True on success."""
@@ -1459,13 +1615,12 @@ class F1Drivers(commands.Cog):
     # Commands — main group
     # ------------------------------------------------------------------
 
-    @commands.group(name="f1drivers", aliases=["f1d", "f1guess", "f1pic"])
+    @commands.group(name="f1drivers", aliases=["f1d", "f1guess", "f1pic"], invoke_without_command=True)
     @commands.guild_only()
     async def f1drivers(self, ctx: commands.Context):
         """F1 Driver Picture Quiz commands.
         Run `[p]f1drivers setup` once (admin) to download images, then `[p]f1drivers start` to play."""
-        if ctx.invoked_subcommand is None:
-            await ctx.send_help(ctx.command)
+        await ctx.send_help(ctx.command)
 
     # ------------------------------------------------------------------
     # Setup — download all images
@@ -1481,7 +1636,7 @@ class F1Drivers(commands.Cog):
         total = len(DRIVERS)
         embed = discord.Embed(
             title="📥  Downloading Driver Portraits",
-            description=f"Fetching images for **{total}** drivers from Wikipedia. This might take a minute...",
+            description=f"Downloading portraits for **{total}** drivers. This will only take a moment...",
             colour=0xE8002D,
         )
         embed.set_footer(text="jaffar21")
@@ -1504,7 +1659,8 @@ class F1Drivers(commands.Cog):
                     ok += 1
                     continue
 
-                url = await self._fetch_wiki_image_url(session, driver["wiki"])
+                # Use the pre-resolved direct image URL — no API lookup needed
+                url = DRIVER_IMAGE_URLS.get(slug)
                 if not url:
                     failed.append(driver["name"])
                     continue
@@ -1557,7 +1713,6 @@ class F1Drivers(commands.Cog):
             result_embed.add_field(
                 name="Tip",
                 value=(
-                    "For any driver that failed, try `[p]f1drivers refresh <name>` individually.\n"
                     "To wipe everything and retry from scratch: "
                     "`[p]f1drivers clearimages` then `[p]f1drivers setup`."
                 ),
@@ -1672,48 +1827,12 @@ class F1Drivers(commands.Cog):
         await asyncio.sleep(1)
         await self._next_round(ctx.guild.id, channel)
 
-    @f1drivers.command(name="refresh")
-    @commands.admin_or_permissions(administrator=True)
-    async def f1drivers_refresh(self, ctx: commands.Context, *, driver_name: str):
-        """Re-download the image for a specific driver by name."""
-        target = None
-        norm_input = _normalize(driver_name)
-        for d in DRIVERS:
-            if _normalize(d["name"]) == norm_input or norm_input in [_normalize(a) for a in d["answers"]]:
-                target = d
-                break
-
-        if not target:
-            await ctx.send(f"Couldn't find a driver matching `{driver_name}`.")
-            return
-
-        # Remove old images
-        for ext in ("jpg", "jpeg", "png", "webp"):
-            old = self._image_dir() / f"{target['slug']}.{ext}"
-            if old.exists():
-                old.unlink()
-
-        msg = await ctx.send(f"Re-downloading image for **{target['name']}**...")
-        async with aiohttp.ClientSession(
-            headers={"User-Agent": "F1DriversTriviaBot/1.0 (Red-DiscordBot cog by jaffar21)"}
-        ) as session:
-            url = await self._fetch_wiki_image_url(session, target["wiki"])
-            if not url:
-                await msg.edit(content=f"❌ Couldn't find a Wikipedia image for **{target['name']}**.")
-                return
-            success = await self._download_image(session, url, target["slug"])
-            if success:
-                await msg.edit(content=f"✅ Image refreshed for **{target['name']}**!")
-            else:
-                await msg.edit(content=f"❌ Failed to download image for **{target['name']}**.")
-
     @f1drivers.command(name="clearimages")
     @commands.admin_or_permissions(administrator=True)
     async def f1drivers_clearimages(self, ctx: commands.Context):
-        """Delete all locally cached driver images so setup downloads them fresh.
+        """Delete all locally cached driver images so setup re-downloads them fresh.
 
-        Run this if the old setup downloaded wrong or corrupted images,
-        then run `[p]f1drivers setup` again.
+        Use this followed by `[p]f1drivers setup` to get a clean install.
         """
         img_dir = self._image_dir()
         if not img_dir.exists():
