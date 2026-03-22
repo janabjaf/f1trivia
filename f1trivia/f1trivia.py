@@ -32,13 +32,11 @@ def _answers_match(user_input: str, accepted: List[str]) -> bool:
         norm_ans = _normalize(ans)
         if norm_input == norm_ans:
             return True
-        # Allow the answer to be contained if it's a meaningful chunk
+        # Allow typing just a surname/first name when the answer is a full name
         # e.g. "verstappen" matches "max verstappen"
+        # Guard: never allow purely numeric words (years, numbers) to partially match
         words_ans = norm_ans.split()
-        if len(words_ans) > 1 and norm_input in words_ans:
-            return True
-        words_input = norm_input.split()
-        if len(words_input) > 1 and norm_ans in words_input:
+        if len(words_ans) > 1 and norm_input in words_ans and not norm_input.isdigit():
             return True
     return False
 
@@ -118,7 +116,7 @@ QUESTIONS: List[Dict] = [
     {"q": "AlphaTauri rebranded to what name for the 2024 season?", "a": ["RB", "Visa Cash App RB", "VCARB"]},
     {"q": "Which team did Sebastian Vettel drive for from 2015 to 2020?", "a": ["Ferrari", "Scuderia Ferrari"]},
     {"q": "Haas F1 Team is headquartered in which country?", "a": ["USA", "United States", "United States of America"]},
-    {"q": "Which constructor won its first ever race at the 2016 Australian GP through Nico Rosberg?", "a": ["Mercedes"]},
+    {"q": "Nico Rosberg won the opening race of the 2016 season at which Grand Prix?", "a": ["Australian Grand Prix", "Australia", "Melbourne"]},
     {"q": "Which team employed both Lewis Hamilton and Nico Rosberg as teammates?", "a": ["Mercedes"]},
     {"q": "Williams had a famous partnership with which engine supplier in the late 1980s?", "a": ["Honda"]},
     {"q": "What engine did Benetton use when Michael Schumacher won his first title in 1994?", "a": ["Ford", "Ford Zetec-R", "Cosworth"]},
@@ -182,7 +180,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Which country hosted the first-ever F1 race in 1950?", "a": ["United Kingdom", "UK", "Britain", "Great Britain"]},
     {"q": "The Chinese Grand Prix is held in which city?", "a": ["Shanghai"]},
     {"q": "Albert Park circuit is in which Australian city?", "a": ["Melbourne"]},
-    {"q": "Which corner at Silverstone is named after a famous British racing driver?", "a": ["Copse", "Stowe", "Club", "Becketts"]},
+    {"q": "Which famous high-speed corner at Silverstone comes immediately after the start/finish straight?", "a": ["Copse"]},
     {"q": "The Loews hairpin is found at which street circuit?", "a": ["Monaco"]},
 
     # ===== RECORDS =====
@@ -201,9 +199,9 @@ QUESTIONS: List[Dict] = [
     {"q": "The record for the most laps led in a career is held by which driver?", "a": ["Lewis Hamilton", "Hamilton"]},
     {"q": "Who has started the most F1 races in history?", "a": ["Fernando Alonso", "Alonso"]},
     {"q": "Who has the record for the most fastest laps in F1?", "a": ["Michael Schumacher", "Lewis Hamilton"]},
-    {"q": "What is the record for the highest number of wins in consecutive seasons?", "a": ["4"]},
+    {"q": "What is the record for the most consecutive F1 championships won by a single driver?", "a": ["4", "four"]},
     {"q": "Sebastian Vettel won how many consecutive titles from 2010 to 2013?", "a": ["4", "four"]},
-    {"q": "Ayrton Senna set the Monaco pole position record in 1989 with how many consecutive poles there?", "a": ["8", "eight"]},
+    {"q": "Ayrton Senna took how many consecutive Monaco Grand Prix pole positions from 1985 to 1992?", "a": ["8", "eight"]},
     {"q": "Who scored the first hat-trick (pole, win, fastest lap) in F1?", "a": ["Fangio", "Juan Manuel Fangio"]},
     {"q": "What is the maximum speed typically reached by an F1 car in qualifying?", "a": ["350", "350 kmh", "over 350"]},
     {"q": "The fastest F1 lap ever recorded in race conditions was set at which circuit?", "a": ["Monza"]},
@@ -224,10 +222,10 @@ QUESTIONS: List[Dict] = [
     {"q": "Who won the controversial 2021 Abu Dhabi Grand Prix?", "a": ["Max Verstappen", "Verstappen"]},
     {"q": "The 'Multi 21' incident occurred at the 2013 Malaysian Grand Prix involving which two Red Bull drivers?", "a": ["Vettel and Webber", "Sebastian Vettel and Mark Webber", "Vettel"]},
     {"q": "What does 'Multi 21' mean in Red Bull team orders?", "a": ["Webber first Vettel second", "hold position", "maintain position"]},
-    {"q": "The 2020 Bahrain GP saw Romain Grosjean survive a massive fire after hitting the barriers at which corner?", "a": ["Turn 3", "first corner", "Armco"]},
-    {"q": "Which safety car driver's controversial restart in 2021 Abu Dhabi cost Lewis Hamilton the title?", "a": ["Michael Masi"]},
+    {"q": "The 2020 Bahrain GP saw Romain Grosjean survive a massive fire after hitting the barriers at which corner?", "a": ["Turn 3", "first corner"]},
+    {"q": "Which race director made the controversial safety car restart decision in the 2021 Abu Dhabi GP?", "a": ["Michael Masi", "Masi"]},
     {"q": "Nigel Mansell lost the 1986 title after a tyre blowout at which circuit?", "a": ["Adelaide", "Australian Grand Prix"]},
-    {"q": "The 'rainmaster' Ayrton Senna put his car on pole 0.8 seconds ahead of anyone else at Monaco in which year using a qualifier lapped?", "a": ["1984"]},
+    {"q": "In which year did a wet Monaco Grand Prix see Senna rapidly catching Prost before the race was controversially red-flagged, denying Senna victory?", "a": ["1984"]},
     {"q": "In 1984 Monaco GP, who was leading when the race was controversially stopped?", "a": ["Alain Prost", "Prost"]},
     {"q": "The turbo era of F1 in the 1980s began with which engine?", "a": ["Renault"]},
     {"q": "Jochen Rindt won the 1970 championship posthumously, making him the only posthumous champion. He died at which circuit?", "a": ["Monza"]},
@@ -256,7 +254,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Which F1 driver's father is Lawrence Stroll?", "a": ["Lance Stroll", "Stroll"]},
     {"q": "Pierre Gasly is from which country?", "a": ["France", "French"]},
     {"q": "Esteban Ocon is from which country?", "a": ["France", "French"]},
-    {"q": "Which Japanese driver raced in F1 for the longest time?", "a": ["Kamui Kobayashi"]},
+    {"q": "Which Japanese driver scored a memorable podium for Sauber at the 2012 Japanese Grand Prix?", "a": ["Kamui Kobayashi"]},
     {"q": "Yuki Tsunoda drives for which team in 2024?", "a": ["RB", "Visa Cash App RB", "VCARB"]},
     {"q": "Yuki Tsunoda is from which country?", "a": ["Japan", "Japanese"]},
     {"q": "Oscar Piastri is from which country?", "a": ["Australia", "Australian"]},
@@ -265,8 +263,8 @@ QUESTIONS: List[Dict] = [
     {"q": "Mick Schumacher is the son of which legendary driver?", "a": ["Michael Schumacher", "Schumacher"]},
     {"q": "Damon Hill's father Graham Hill was also an F1 champion — how many titles did Damon win?", "a": ["1", "one"]},
     {"q": "Which driver is known for the 'shoey' celebration?", "a": ["Daniel Ricciardo", "Ricciardo"]},
-    {"w": "The 'shoey' involves drinking what out of a racing boot?", "a": ["champagne", "drink"]},
-    {"q": "Which driver drove for seven different F1 teams in his career?", "a": ["Mark Webber", "Webber"]},
+    {"q": "The 'shoey' involves drinking what out of a racing boot?", "a": ["champagne"]},
+    {"q": "Mark Webber made his Formula 1 debut with which team in 2002?", "a": ["Minardi"]},
     {"q": "Romain Grosjean raced for which team before his crash in 2020?", "a": ["Haas"]},
     {"q": "Michael Schumacher came out of retirement to join which team in 2010?", "a": ["Mercedes"]},
     {"q": "Which F1 driver famously said 'I am made of different stuff' after winning at Monaco?", "a": ["Lewis Hamilton", "Hamilton"]},
@@ -284,10 +282,10 @@ QUESTIONS: List[Dict] = [
     {"q": "Who drove for Red Bull alongside Sebastian Vettel?", "a": ["Mark Webber", "Webber"]},
     {"q": "Mark Webber is from which country?", "a": ["Australia", "Australian"]},
     {"q": "Which British driver was known as 'The Flying Scotsman'?", "a": ["Jackie Stewart", "Stewart"]},
-    {"q": "Which driver is associated with wearing a distinctive tinted visor and the phrase 'By crikey'?", "a": ["Valtteri Bottas"]},
+    {"q": "Which Australian F1 driver famously said 'Not bad for a number two driver' after winning the 2010 British Grand Prix?", "a": ["Mark Webber", "Webber"]},
     {"q": "Riccardo Patrese drove for Williams in the early 1990s alongside which champion?", "a": ["Nigel Mansell", "Mansell"]},
     {"q": "Which Brazilian driver came closest to matching Senna's talent in the 2000s?", "a": ["Felipe Massa", "Massa", "Rubens Barrichello"]},
-    {"q": "Rubens Barrichello holds the record for most race starts without a championship. How many races did he start?", "a": ["322"]},
+    {"q": "Rubens Barrichello holds the record for most race starts without a championship. How many races did he start?", "a": ["326"]},
     {"q": "Who beat Senna in the 1984 Monaco GP through a race red-flag decision?", "a": ["Prost", "Alain Prost"]},
     {"q": "Which driver was famous for his 'number one' hand signal celebration?", "a": ["Sebastian Vettel", "Vettel"]},
     {"q": "Kevin Magnussen drives for which team?", "a": ["Haas"]},
@@ -367,11 +365,11 @@ QUESTIONS: List[Dict] = [
     {"q": "Ferrari had a strong start to 2022 but struggled with reliability — who was their main driver?", "a": ["Charles Leclerc", "Leclerc"]},
     {"q": "Max Verstappen set a then-record for most wins in a season in 2023. How many did he win?", "a": ["19", "nineteen"]},
     {"q": "Who became the first female F1 driver since 1992 to test with a current team?", "a": ["Jamie Chadwick", "Susie Wolff"]},
-    {"q": "The 2023 season was notable for Red Bull's dominance — at one point they had won how many consecutive races?", "a": ["10", "fifteen"]},
+    {"q": "The 2023 season was notable for Red Bull's dominance — how many consecutive races did they win before Singapore?", "a": ["14", "fourteen"]},
     {"q": "Which driver replaced Sebastian Vettel at Red Bull in 2014?", "a": ["Daniel Ricciardo", "Ricciardo"]},
     {"q": "Which team did Daniel Ricciardo join after Red Bull?", "a": ["Renault"]},
     {"q": "Daniel Ricciardo won his last F1 race at which Grand Prix?", "a": ["Italian Grand Prix", "Monza", "Italian GP"]},
-    {"q": "Who took Daniel Ricciardo's seat at Red Bull in 2022?", "a": ["Sergio Perez", "Perez"]},
+    {"q": "Who took Daniel Ricciardo's seat at McLaren for the 2023 season?", "a": ["Oscar Piastri", "Piastri"]},
     {"q": "Who replaced Nikita Mazepin at Haas in 2022?", "a": ["Kevin Magnussen", "Magnussen"]},
     {"q": "Nikita Mazepin was dropped by Haas for which reason?", "a": ["Russia invasion of Ukraine", "Russia Ukraine war", "sanctions"]},
     {"q": "Which team was originally called Toleman before becoming Benetton?", "a": ["Benetton", "Toleman"]},
@@ -394,8 +392,8 @@ QUESTIONS: List[Dict] = [
     {"q": "The halo cockpit protection device was made mandatory in F1 from which year?", "a": ["2018"]},
     {"q": "The HANS device (Head and Neck Support) was made mandatory in F1 from which year?", "a": ["2003"]},
     {"q": "Romain Grosjean survived a fireball crash at the 2020 Bahrain GP — he escaped in how many seconds?", "a": ["28", "about 30", "under 30"]},
-    {"q": "Charles Leclerc was involved in a serious crash at which circuit in 2022 where his car disintegrated?", "a": ["Monaco", "Austria"]},
-    {"q": "The Medical Car in F1 is driven by which doctor?", "a": ["Ian Roberts", "the FIA Medical Car driver"]},
+    {"q": "Charles Leclerc crashed heavily during qualifying at which circuit in 2022, badly damaging his car?", "a": ["Monaco"]},
+    {"q": "The FIA Medical Delegate who rides in the F1 Medical Car is which doctor?", "a": ["Ian Roberts"]},
     {"q": "The FIA (governing body of F1) stands for?", "a": ["Federation Internationale de l'Automobile", "International Automobile Federation"]},
     {"q": "The FIA was founded in which year?", "a": ["1904"]},
     {"q": "The FIA race director role became controversial after which year's championship?", "a": ["2021"]},
@@ -451,7 +449,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Peter Collins was a Ferrari driver in the late 1950s and died at which circuit?", "a": ["Nurburgring", "Nürburgring"]},
     {"q": "Wolfgang von Trips was a German Ferrari driver who died in an accident at which circuit in 1961?", "a": ["Monza"]},
     {"q": "The 'Shark nose' Ferrari was the iconic car of which year?", "a": ["1961"]},
-    {"q": "Ferrari won every race in which F1 season?", "a": ["1952", "1953"]},
+    {"q": "Ferrari dominated the F1 championship with Alberto Ascari in which two consecutive seasons?", "a": ["1952 and 1953", "1952", "1953"]},
     {"q": "Alberto Ascari went on a record winning streak of how many consecutive GP wins?", "a": ["9", "nine"]},
     {"q": "Which team did Jack Brabham create that bore his own name?", "a": ["Brabham"]},
     {"q": "Jack Brabham won the 1966 championship in his own car — the Brabham BT19 — powered by which engine?", "a": ["Repco", "Repco Brabham"]},
@@ -460,7 +458,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Dan Gurney was a famous American driver who raced in which era of F1?", "a": ["1960s", "1960s and 1970s"]},
     {"q": "Chris Amon was a New Zealand driver famous for his bad luck — he never won an F1 race despite being fast. True or false?", "a": ["true"]},
     {"q": "The Brabham BT26 was the car driven by which legendary Austrian driver?", "a": ["Jochen Rindt", "Rindt"]},
-    {"q": "Jochen Rindt's nationality was?", "a": ["Austrian", "Austrian-German"]},
+    {"q": "Jochen Rindt's nationality was?", "a": ["Austrian"]},
 
     # ===== 1970s ERA =====
     {"q": "Who won the 1976 F1 championship by one point over Niki Lauda?", "a": ["James Hunt", "Hunt"]},
@@ -482,7 +480,7 @@ QUESTIONS: List[Dict] = [
     {"q": "The McLaren team in 1988 used engines from which supplier?", "a": ["Honda"]},
     {"q": "The Williams team in the late 1980s used engines from which supplier?", "a": ["Honda", "Judd", "Ford"]},
     {"q": "Nelson Piquet drove for which team when he won the 1987 championship?", "a": ["Williams"]},
-    {"q": "The famous qualifying battle at the 1986 San Marino GP where Senna took pole by 5 seconds was against whom?", "a": ["Prost", "Alain Prost"]},
+    {"q": "Ayrton Senna scored his first-ever F1 race victory at which 1985 Grand Prix?", "a": ["Portuguese Grand Prix", "Portugal", "Estoril"]},
     {"q": "The 1986 F1 season saw the championship decided at the Australian GP between Mansell, Piquet, and Prost. Who won the title?", "a": ["Alain Prost", "Prost"]},
     {"q": "Which McLaren car dominated the 1984 season with Lauda and Prost?", "a": ["McLaren MP4/2", "MP4/2"]},
     {"q": "Ayrton Senna's first F1 race was in which year?", "a": ["1984"]},
@@ -490,7 +488,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Senna moved from Toleman to which team in 1985?", "a": ["Lotus"]},
     {"q": "Senna joined McLaren in which year?", "a": ["1988"]},
     {"q": "The 'flying lap' in qualifying that made Senna cry was at which circuit in 1988?", "a": ["Monaco"]},
-    {"q": "Which French driver famously had a turbocharged Renault engine that often broke down?", "a": ["Renault", "Alain Prost", "Rene Arnoux"]},
+    {"q": "Which French driver famously had a turbocharged Renault engine that often broke down?", "a": ["Alain Prost", "Prost", "Rene Arnoux"]},
     {"q": "Who was Senna's teammate at McLaren from 1988 to 1989?", "a": ["Alain Prost", "Prost"]},
     {"q": "Senna and Prost's collision at the 1989 Japanese GP saw which driver take a title that Senna had led?", "a": ["Alain Prost", "Prost"]},
 
@@ -505,7 +503,7 @@ QUESTIONS: List[Dict] = [
     {"q": "The 1997 European Grand Prix title decider was held at which circuit?", "a": ["Jerez"]},
     {"q": "Michael Schumacher was disqualified from the 1997 championship standings for which reason?", "a": ["colliding with Villeneuve", "deliberately crashing", "ramming Villeneuve"]},
     {"q": "Mika Hakkinen drove for which team?", "a": ["McLaren"]},
-    {"q": "Eddie Irvine came within 4 points of the 1999 championship — which team was he with?", "a": ["Ferrari"]},
+    {"q": "Eddie Irvine lost the 1999 championship to Hakkinen by just 2 points — which team was he with?", "a": ["Ferrari"]},
     {"q": "Michael Schumacher broke his leg in which 1999 race?", "a": ["British Grand Prix", "Silverstone", "British GP"]},
     {"q": "The Williams FW18 was one of the most dominant cars in 1996 — which driver dominated with it?", "a": ["Damon Hill", "Hill"]},
     {"q": "In which year did Nigel Mansell win the IndyCar championship after his F1 title?", "a": ["1993"]},
@@ -521,22 +519,22 @@ QUESTIONS: List[Dict] = [
     {"q": "Which teams boycotted the 2005 US GP?", "a": ["seven teams", "Michelin teams", "non-Bridgestone teams"]},
     {"q": "The 2007 Spygate scandal involved which team stealing design secrets from Ferrari?", "a": ["McLaren"]},
     {"q": "McLaren was fined how much in the 2007 Spygate scandal?", "a": ["100 million", "$100 million"]},
-    {"q": "Renault's Adrian Newey left to join which team in 2006?", "a": ["Red Bull", "Red Bull Racing"]},
+    {"q": "Adrian Newey left McLaren to join which team in 2006?", "a": ["Red Bull", "Red Bull Racing"]},
     {"q": "Adrian Newey is regarded as the greatest F1 car designer — he designed cars for which teams?", "a": ["Williams, McLaren, Red Bull", "Williams McLaren Red Bull"]},
     {"q": "Jenson Button's championship-winning Brawn GP car used which engine?", "a": ["Mercedes"]},
     {"q": "The double diffuser that Brawn GP used in 2009 was a controversy involving which other teams?", "a": ["Toyota, Williams", "multiple teams"]},
     {"q": "Robert Kubica scored a famous win for BMW Sauber at which race?", "a": ["Canadian Grand Prix", "Canada", "Montreal"]},
-    {"q": "Robert Kubica suffered a serious accident in which motorsport event in 2011?", "a": ["Rali de Portugal", "Rally", "rallying"]},
-    {"q": "Which driver won the GP2 title in 2008 and debuted in F1 with Brawn GP?", "a": ["Nico Rosberg"]},
+    {"q": "Robert Kubica suffered a serious accident at the Ronde di Andora rally in which country in 2011?", "a": ["Italy", "Italian"]},
+    {"q": "Nico Rosberg made his F1 debut in which year?", "a": ["2006"]},
 
     # ===== 2010s ERA =====
     {"q": "The 2010 championship was won by Sebastian Vettel — who was the runner-up?", "a": ["Fernando Alonso", "Alonso"]},
     {"q": "Red Bull won the championship from 2010 to 2013 — which engine did they use?", "a": ["Renault"]},
-    {"q": "The Mercedes W05 dominated 2014 — how many races did they win out of 19?", "a": ["16", "fifteen", "sixteen"]},
+    {"q": "The Mercedes W05 dominated 2014 — how many races did they win out of 19?", "a": ["16", "sixteen"]},
     {"q": "Which year saw the biggest engine rule change in F1 in decades with the intro of hybrid power units?", "a": ["2014"]},
     {"q": "Lewis Hamilton left McLaren for which team in 2013?", "a": ["Mercedes"]},
     {"q": "Nico Rosberg won the 2016 championship and retired how soon after?", "a": ["5 days", "days later", "days after"]},
-    {"q": "The 2016 championship battle between Hamilton and Rosberg was decided at the final race in which country?", "a": ["Abu Dhabi"]},
+    {"q": "The 2016 championship battle between Hamilton and Rosberg was decided at the final race in which country?", "a": ["UAE", "United Arab Emirates", "Abu Dhabi"]},
     {"q": "Which team won the Constructors Championship in 2019?", "a": ["Mercedes"]},
     {"q": "Sebastian Vettel won his last race in which year?", "a": ["2019"]},
     {"q": "Sebastian Vettel won the 2019 Singapore Grand Prix — was that his last win?", "a": ["yes"]},
@@ -549,7 +547,7 @@ QUESTIONS: List[Dict] = [
     {"q": "The first female driver to race in F1 was who?", "a": ["Maria Teresa de Filippis", "de Filippis"]},
     {"q": "The first F1 race under lights (night race) was which Grand Prix?", "a": ["Singapore Grand Prix", "Singapore GP", "Singapore"]},
     {"q": "The first F1 Grand Prix broadcast live on TV in Britain was in which year?", "a": ["1978"]},
-    {"q": "The first driver to be killed in an F1 race was?", "a": ["Luigi Fagioli", "Onofre Marimon", "various"]},
+    {"q": "Luigi Fagioli won his only F1 race at which Grand Prix in 1951?", "a": ["French Grand Prix", "France", "Reims"]},
     {"q": "The first F1 race in North America was the United States Grand Prix in which year?", "a": ["1959"]},
     {"q": "Fittipaldi was the first South American champion — from which country?", "a": ["Brazil", "Brazilian"]},
     {"q": "The GPDA (Grand Prix Drivers Association) was formed in which year?", "a": ["1961"]},
@@ -586,7 +584,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Which F1 driver is known for his 'finger gun' celebration?", "a": ["Sebastian Vettel", "Vettel"]},
     {"q": "Theo Pourchaire was a reserve driver for which F1 team?", "a": ["Alfa Romeo", "Sauber"]},
     {"q": "Pato O'Ward tested a McLaren F1 car in which year?", "a": ["2021", "2022"]},
-    {"q": "Which IndyCar champion tested an F1 car with McLaren?", "a": ["Pato O'Ward"]},
+    {"q": "Which IndyCar race winner was invited to test a McLaren F1 car as a reward for his IndyCar performance?", "a": ["Pato O'Ward", "O'Ward"]},
     {"q": "Nyck de Vries made his F1 debut at the Italian Grand Prix in 2022 driving for which team?", "a": ["Williams"]},
     {"q": "Nico Hulkenberg is famous for holding which record?", "a": ["most starts without a podium", "most starts without podium"]},
     {"q": "Felipe Drugovich is a reserve driver for which team?", "a": ["Aston Martin"]},
@@ -596,12 +594,12 @@ QUESTIONS: List[Dict] = [
     {"q": "Jacky Ickx was a famous Belgian driver who drove for which teams?", "a": ["Ferrari", "Brabham"]},
     {"q": "Carlos Reutemann almost won the 1981 championship but lost to which driver by one point?", "a": ["Nelson Piquet", "Piquet"]},
     {"q": "Didier Pironi was leading the 1982 championship before a crash at which race?", "a": ["German Grand Prix", "Hockenheim"]},
-    {"q": "Keke Rosberg's son Nico Rosberg also became champion — they are the only father-son duo to both win. True or false?", "a": ["true"]},
+    {"q": "Both Keke Rosberg (1982) and Nico Rosberg (2016) won the F1 World Championship — making them one of two father-son champion pairs. Name the other father-son duo who both won.", "a": ["Graham Hill and Damon Hill", "Hill", "Damon Hill", "Graham Hill"]},
     {"q": "Graham Hill won the Monaco Grand Prix 5 times and was nicknamed what?", "a": ["Mr Monaco", "King of Monaco"]},
     {"q": "Who holds the record for the most Monaco Grand Prix wins?", "a": ["Ayrton Senna", "Senna"]},
     {"q": "How many times did Ayrton Senna win the Monaco Grand Prix?", "a": ["6", "six"]},
     {"q": "Lewis Hamilton has won the Monaco Grand Prix how many times?", "a": ["3", "three"]},
-    {"q": "Max Verstappen has won the Monaco Grand Prix — in which year was his first Monaco win?", "a": ["2021", "2023"]},
+    {"q": "Max Verstappen has won the Monaco Grand Prix — in which year was his first Monaco win?", "a": ["2021"]},
 
     # ===== ENGINE SUPPLIERS =====
     {"q": "Which engine supplier partnered with Red Bull from 2019?", "a": ["Honda"]},
@@ -640,7 +638,7 @@ QUESTIONS: List[Dict] = [
     {"q": "The 'flying lap' in qualifying is a timed lap at maximum effort — true or false?", "a": ["true"]},
     {"q": "An out-lap in qualifying is used to?", "a": ["warm up tyres", "prepare for a flying lap", "heat up tyres"]},
     {"q": "The pitlane is closed during which phase of the race?", "a": ["safety car restart", "start", "first lap"]},
-    {"q": "Lewis Hamilton has raced for which teams in F1?", "a": ["McLaren and Mercedes", "McLaren Mercedes Ferrari"]},
+    {"q": "Lewis Hamilton has raced for which three teams in F1 (as of 2025)?", "a": ["McLaren, Mercedes, Ferrari", "McLaren Mercedes Ferrari", "McLaren and Mercedes and Ferrari"]},
     {"q": "Which is the oldest team currently on the F1 grid?", "a": ["Ferrari"]},
     {"q": "In which country was Sebastian Vettel born?", "a": ["Germany"]},
     {"q": "Sebastian Vettel retired from F1 after which season?", "a": ["2022"]},
@@ -654,7 +652,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Nigel Mansell's famous 'walk to the pits' happened after a tyre failure at which race?", "a": ["1991 Canadian Grand Prix", "Canada", "Montreal"]},
     {"q": "Mansell's car ran out of fuel on the last lap at which iconic moment?", "a": ["1991 Canadian Grand Prix", "Montreal 1991"]},
     {"q": "Christian Horner joined Red Bull Racing as team principal in which year?", "a": ["2005"]},
-    {"q": "Which F1 driver has won the most races at Spa-Francorchamps?", "a": ["Michael Schumacher", "Schumacher", "Lewis Hamilton"]},
+    {"q": "Which F1 driver has won the most races at Spa-Francorchamps?", "a": ["Michael Schumacher", "Schumacher"]},
     {"q": "Who was the last British driver to win the F1 championship before Hamilton?", "a": ["Jenson Button", "Button"]},
     {"q": "Jenson Button won the 2009 championship — how many races did he win that year?", "a": ["6", "six"]},
     {"q": "Jenson Button's famous drives include which wet weather masterclass?", "a": ["Canadian Grand Prix 2011", "Canada 2011"]},
@@ -684,7 +682,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Which circuit was renovated with a brand new layout and hosted the 2023 Las Vegas GP?", "a": ["Las Vegas Street Circuit", "Las Vegas"]},
 
     # ===== ADDITIONAL MODERN ERA =====
-    {"q": "Who won the 2023 Monaco Grand Prix?", "a": ["Fernando Alonso", "Alonso"]},
+    {"q": "Who won the 2023 Monaco Grand Prix?", "a": ["Max Verstappen", "Verstappen"]},
     {"q": "Who won the 2023 British Grand Prix?", "a": ["Max Verstappen", "Verstappen"]},
     {"q": "Which team won back-to-back Constructors Championships in 2022 and 2023?", "a": ["Red Bull", "Red Bull Racing"]},
     {"q": "Lando Norris won his first race at the 2024 Miami Grand Prix — which country is Miami in?", "a": ["USA", "United States", "America"]},
@@ -699,7 +697,7 @@ QUESTIONS: List[Dict] = [
     {"q": "Which former Red Bull technical director joined Aston Martin?", "a": ["Adrian Newey"]},
     {"q": "Adrian Newey announced he would join Aston Martin in which year?", "a": ["2025"]},
     {"q": "The 2024 Constructors Champion was which team?", "a": ["McLaren"]},
-    {"q": "Who was the 2024 Constructors Championship runner-up?", "a": ["Ferrari", "Red Bull"]},
+    {"q": "Who was the 2024 Constructors Championship runner-up?", "a": ["Ferrari"]},
     {"q": "Which team clinched the 2024 Constructors Championship at the final race?", "a": ["McLaren"]},
 
     # ===== 1950s DEEP CUTS =====
@@ -722,7 +720,7 @@ QUESTIONS: List[Dict] = [
     {"q": "What is 'porpoising' in F1?", "a": ["bouncing car", "car bouncing up and down", "aerodynamic bouncing"]},
     {"q": "Ferrari's famous red livery is called what in Italian?", "a": ["Rosso Corsa"]},
     {"q": "Which team uses the 'prancing horse' logo?", "a": ["Ferrari", "Scuderia Ferrari"]},
-    {"q": "The McLaren team's famous 'M' logo was designed by whom?", "a": ["various", "in-house"]},
+    {"q": "McLaren's famous papaya orange colour was introduced as their primary livery colour in which decade?", "a": ["1960s", "late 1960s"]},
     {"q": "What is the name of F1's official online streaming service?", "a": ["F1 TV", "F1TV"]},
     {"q": "Which company builds the F1 Safety Car?", "a": ["Mercedes", "AMG", "Mercedes-AMG"]},
     {"q": "The Medical Intervention Vehicle in F1 is currently which car brand?", "a": ["Mercedes", "AMG"]},
@@ -802,12 +800,11 @@ class F1Trivia(commands.Cog):
     # Commands
     # ------------------------------------------------------------------
 
-    @commands.group(name="f1trivia", aliases=["f1t", "f1quiz"])
+    @commands.group(name="f1trivia", aliases=["f1t", "f1quiz"], invoke_without_command=True)
     @commands.guild_only()
     async def f1trivia(self, ctx: commands.Context):
         """F1 Trivia commands. Use [p]f1trivia start to begin a game."""
-        if ctx.invoked_subcommand is None:
-            await ctx.send_help(ctx.command)
+        await ctx.send_help(ctx.command)
 
     @f1trivia.command(name="start")
     @commands.guild_only()
@@ -942,12 +939,11 @@ class F1Trivia(commands.Cog):
             remaining = end_time - time.monotonic()
             msg = await self.bot.wait_for("message", check=check, timeout=max(0.1, remaining))
         except asyncio.TimeoutError:
-            # Nobody got it
+            # Nobody got it — save the answer BEFORE clearing state
+            answers = game["current_answers"] or []
+            canonical = answers[0] if answers else "Unknown"
             game["current_q"] = None
             game["current_answers"] = None
-
-            answers = game.get("current_answers") or []
-            canonical = answers[0] if answers else "Unknown"
             await channel.send(f"⏰ Time's up! Nobody got it. The answer was **{canonical}**.")
             await asyncio.sleep(1.5)
             await self._next_round(guild_id, channel)
